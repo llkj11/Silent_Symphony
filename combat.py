@@ -3,6 +3,7 @@ import ui
 import items # Import items to access ITEM_DB for weapon stats
 import character # Import character module to use gain_xp
 import config # Make sure config is imported if DEBUG_MODE is used here
+import entities # Import entities to access SHARED_LOOT_GROUPS
 
 # Simple Combat Function
 def combat(player_character, enemy_instance):
@@ -76,34 +77,69 @@ def combat(player_character, enemy_instance):
             return "fled"
         
         if enemy_health <= 0:
-            print(f"You defeated the {enemy_name}!")
+            print(f"\nYou defeated the {enemy_name}!")
             player_character['health'] = player_health
             # Award XP
             xp_reward = enemy_instance.get('xp_value', 0)
             if xp_reward > 0:
                 character.gain_xp(player_character, xp_reward)
             
-            # Handle Loot Drops
-            loot_table = enemy_instance.get('loot_table', [])
-            dropped_items_count = 0
-            if loot_table:
-                print(f"The {enemy_name} dropped:")
-                for loot_entry in loot_table:
+            # --- New Loot Handling Logic ---
+            dropped_items_this_combat = [] # To collect all item names dropped
+
+            # 1. Process loot_groups
+            for group_name in enemy_instance.get('loot_groups', []):
+                group_table = entities.SHARED_LOOT_GROUPS.get(group_name, [])
+                for loot_entry in group_table:
                     item_id = loot_entry.get("item_id")
-                    chance = loot_entry.get("chance", 0) # Default to 0 chance if not specified
-                    
-                    if random.random() <= chance: # random.random() is 0.0 to <1.0
-                        if item_id in items.ITEM_DB: # Check if item exists
+                    chance = loot_entry.get("chance", 0)
+                    if item_id and random.random() <= chance:
+                        if item_id in items.ITEM_DB:
                             player_character['inventory'].append(item_id)
-                            print(f"- {items.ITEM_DB[item_id]['name']}")
-                            dropped_items_count += 1
-                        else:
-                            # It's good practice to check if config is available
-                            # For simplicity, assuming config.DEBUG_MODE is accessible if config is imported.
-                            if 'config' in globals() and config.DEBUG_MODE:
-                                print(f"DEBUG: Loot item ID '{item_id}' from loot table not found in ITEM_DB.")
+                            dropped_items_this_combat.append(items.ITEM_DB[item_id]['name'])
+                        elif config.DEBUG_MODE:
+                            print(f"DEBUG: Loot item ID '{item_id}' from group '{group_name}' not found in ITEM_DB.")
             
-            if dropped_items_count > 0:
+            # 2. Process unique_loot
+            unique_loot_table = enemy_instance.get('unique_loot', [])
+            for loot_entry in unique_loot_table:
+                item_id = loot_entry.get("item_id")
+                chance = loot_entry.get("chance", 0)
+                if item_id and random.random() <= chance:
+                    if item_id in items.ITEM_DB:
+                        player_character['inventory'].append(item_id)
+                        dropped_items_this_combat.append(items.ITEM_DB[item_id]['name'])
+                    elif config.DEBUG_MODE:
+                        print(f"DEBUG: Unique loot item ID '{item_id}' not found in ITEM_DB.")
+            
+            # 3. Process old loot_table (for backward compatibility during transition)
+            # This part should eventually be removed once all enemies are updated.
+            old_format_loot_table = enemy_instance.get('loot_table', [])
+            if old_format_loot_table and isinstance(old_format_loot_table[0], str): # Check if it's the old list-of-strings format
+                if config.DEBUG_MODE:
+                    print(f"DEBUG: Enemy '{enemy_name}' is using old loot_table string format. Please update.")
+                for item_id in old_format_loot_table: # Assuming 100% drop for old format as a fallback
+                    if item_id in items.ITEM_DB:
+                        player_character['inventory'].append(item_id)
+                        dropped_items_this_combat.append(items.ITEM_DB[item_id]['name'])
+                    elif config.DEBUG_MODE:
+                         print(f"DEBUG: Old format loot item ID '{item_id}' not found in ITEM_DB.")
+            elif old_format_loot_table and isinstance(old_format_loot_table[0], dict): # It might be already new format from a previous step
+                 for loot_entry in old_format_loot_table:
+                    item_id = loot_entry.get("item_id")
+                    chance = loot_entry.get("chance", 0) 
+                    if item_id and random.random() <= chance: 
+                        if item_id in items.ITEM_DB: 
+                            player_character['inventory'].append(item_id)
+                            dropped_items_this_combat.append(items.ITEM_DB[item_id]['name'])
+                        elif config.DEBUG_MODE:
+                            print(f"DEBUG: Loot item ID '{item_id}' from loot table not found in ITEM_DB.")
+
+            # Display dropped items
+            if dropped_items_this_combat:
+                print(f"The {enemy_name} dropped:")
+                for item_name_dropped in dropped_items_this_combat:
+                    print(f"- {item_name_dropped}")
                 print("Added to your inventory.")
             else:
                 print(f"The {enemy_name} dropped nothing of interest this time.")

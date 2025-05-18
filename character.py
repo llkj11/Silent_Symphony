@@ -82,7 +82,7 @@ As you take your first steps into the unknown, you can't shake the feeling that 
     player_character['health'] = 30 
     player_character['max_health'] = 30
     player_character['inventory'] = []
-    player_character['location'] = "Beach" 
+    player_character['location'] = "beach_starting"
     player_character['last_described_location'] = None
     player_character['equipped_weapon'] = None
     player_character['equipped_armor'] = None

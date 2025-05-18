@@ -792,5 +792,12 @@ ITEM_DB = {
         "effect": {"health_regen_per_minute": 1},
         "value": 150
     },
+    "small_tarnished_bronze_key": {
+        "id": "small_tarnished_bronze_key",
+        "name": "Small Tarnished Bronze Key",
+        "description": "A small, old bronze key, covered in a layer of green tarnish. It looks like it might unlock a small box or old lock.",
+        "type": "key_item", # Or quest_item, or a new type "key"
+        "value": 5 
+    },
     # --- END OF NEW ITEMS (100 added) ---
 }

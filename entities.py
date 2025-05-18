@@ -1,3 +1,28 @@
+# --- Shared Loot Groups ---
+SHARED_LOOT_GROUPS = {
+    "goblin_common_junk": [
+        {"item_id": "pebble_shiny", "chance": 0.4},
+        {"item_id": "goblin_ear", "chance": 0.6}
+    ],
+    "goblin_weaponry_crude": [
+        {"item_id": "rusty_dagger", "chance": 0.2},
+        # {"item_id": "spear_common", "chance": 0.15} # spear_common is also in unique_loot for goblin_scout, consider if it should be exclusively unique or if group chance adds
+    ],
+    "bandit_gear_basic": [
+        {"item_id": "old_coin_tarnished", "chance": 0.7},
+        {"item_id": "ration_pack_basic", "chance": 0.3},
+        {"item_id": "leather_scraps", "chance": 0.25}
+    ],
+    "undead_remains_minor": [
+        {"item_id": "bone_fragment", "chance": 0.8},
+        {"item_id": "torn_rag", "chance": 0.6}
+    ],
+    "animal_parts_common": [
+        {"item_id": "animal_hide_small", "chance": 0.7},
+        {"item_id": "bone_fragment", "chance": 0.5},
+    ]
+}
+
 # --- Enemy Templates ---
 # Defines the blueprints for enemies.
 ENEMY_TEMPLATES = {
@@ -8,10 +33,9 @@ ENEMY_TEMPLATES = {
         "health": 15,
         "attack_min": 2,
         "attack_max": 5,
-        "loot_table": [
-            {"item_id": "pebble_shiny", "chance": 0.8},
-            {"item_id": "goblin_ear", "chance": 0.5},
-            {"item_id": "spear_common", "chance": 0.5}
+        "loot_groups": ["goblin_common_junk", "goblin_weaponry_crude"], 
+        "unique_loot": [
+            {"item_id": "spear_common", "chance": 0.25} # higher chance for spear for scout
         ],
         "xp_value": 10
     },
@@ -22,10 +46,12 @@ ENEMY_TEMPLATES = {
         "health": 25,
         "attack_min": 3,
         "attack_max": 7,
-        "loot_table": [
+        "loot_groups": ["animal_parts_common"], 
+        "unique_loot": [
             {"item_id": "broken_shell", "chance": 0.9},
             {"item_id": "seaweed_clump", "chance": 0.6},
-            {"item_id": "healing_salve_minor", "chance": 0.1}
+            {"item_id": "healing_salve_minor", "chance": 0.1},
+            {"item_id": "crab_chitin_fragment", "chance": 0.5} 
         ],
         "xp_value": 20
     },
@@ -40,11 +66,9 @@ ENEMY_TEMPLATES = {
         "health": 20,
         "attack_min": 3,
         "attack_max": 6,
-        "loot_table": [
-            {"item_id": "wooden_club", "chance": 0.7},
-            {"item_id": "leather_scraps", "chance": 0.5},
-            {"item_id": "ration_pack_basic", "chance": 0.3},
-            {"item_id": "old_coin_tarnished", "chance": 0.9}
+        "loot_groups": ["bandit_gear_basic"],
+        "unique_loot": [
+            {"item_id": "wooden_club", "chance": 0.6}
         ],
         "xp_value": 15
     },
@@ -55,7 +79,8 @@ ENEMY_TEMPLATES = {
         "health": 18,
         "attack_min": 2,
         "attack_max": 5,
-        "loot_table": [
+        "loot_groups": ["bandit_gear_basic"],
+        "unique_loot": [
             {"item_id": "hunting_bow_simple", "chance": 0.6},
             {"item_id": "dull_arrowhead", "chance": 0.8},
             {"item_id": "berries_wild", "chance": 0.4}
@@ -99,10 +124,11 @@ ENEMY_TEMPLATES = {
         "health": 20,
         "attack_min": 3,
         "attack_max": 6,
-        "loot_table": [
-            {"item_id": "short_sword_iron", "chance": 0.5},
-            {"item_id": "shadowroot_bark", "chance": 0.3},
-            {"item_id": "string_piece", "chance": 0.7}
+        "loot_groups": ["bandit_gear_basic"], 
+        "unique_loot": [
+            {"item_id": "short_sword_iron", "chance": 0.4},
+            {"item_id": "shadowroot_bark", "chance": 0.35},
+            {"item_id": "string_piece", "chance": 0.6}
         ],
         "xp_value": 22
     },
@@ -490,8 +516,8 @@ ENEMY_TEMPLATES = {
         "health": 25,
         "attack_min": 2,
         "attack_max": 5,
-        "loot_table": [
-            {"item_id": "torn_rag", "chance": 0.8},
+        "loot_groups": ["undead_remains_minor"],
+        "unique_loot": [
             {"item_id": "chipped_mug", "chance": 0.3},
             {"item_id": "ectoplasm_vial", "chance": 0.1}
         ],
@@ -1378,7 +1404,6 @@ def get_enemy_instance(enemy_id):
         template = ENEMY_TEMPLATES[enemy_id]
         instance = template.copy()
         # Ensure mutable fields like loot_table are also copied if necessary,
-        # though for loot_table being a list of strings, direct copy is usually fine
-        # unless the loot generation logic modifies this instance's loot_table.
+        # though for loot generation logic modifies this instance's loot_table.
         return instance
     return None
