@@ -86,6 +86,7 @@ As you take your first steps into the unknown, you can't shake the feeling that 
     player_character['last_described_location'] = None
     player_character['equipped_weapon'] = None
     player_character['equipped_armor'] = None
+    player_character['equipped_shield'] = None
     player_character['level'] = 1
     player_character['xp'] = 0
     player_character['xp_to_next_level'] = int(BASE_XP_TO_NEXT_LEVEL * (XP_LEVEL_MULTIPLIER ** 0)) # Initial XP for level 1 to 2

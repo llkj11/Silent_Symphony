@@ -40,7 +40,12 @@ ENEMY_TEMPLATES = {
         "health": 20,
         "attack_min": 3,
         "attack_max": 6,
-        "loot_table": ["wooden_club", "leather_scraps", "ration_pack_basic", "old_coin_tarnished"],
+        "loot_table": [
+            {"item_id": "wooden_club", "chance": 0.7},
+            {"item_id": "leather_scraps", "chance": 0.5},
+            {"item_id": "ration_pack_basic", "chance": 0.3},
+            {"item_id": "old_coin_tarnished", "chance": 0.9}
+        ],
         "xp_value": 15
     },
     "bandit_archer": {
@@ -49,8 +54,12 @@ ENEMY_TEMPLATES = {
         "description": "A nimble bandit preferring to strike from a distance with a worn bow.",
         "health": 18,
         "attack_min": 2,
-        "attack_max": 5, # Ranged attack
-        "loot_table": ["hunting_bow_simple", "dull_arrowhead", "berries_wild"],
+        "attack_max": 5,
+        "loot_table": [
+            {"item_id": "hunting_bow_simple", "chance": 0.6},
+            {"item_id": "dull_arrowhead", "chance": 0.8},
+            {"item_id": "berries_wild", "chance": 0.4}
+        ],
         "xp_value": 18
     },
     "bandit_cutthroat": {
@@ -60,7 +69,12 @@ ENEMY_TEMPLATES = {
         "health": 22,
         "attack_min": 4,
         "attack_max": 7,
-        "loot_table": ["steel_dagger", "leather_cap", "lockpick_simple", "silver_ring_plain"],
+        "loot_table": [
+            {"item_id": "steel_dagger", "chance": 0.5},
+            {"item_id": "leather_cap", "chance": 0.4},
+            {"item_id": "lockpick_simple", "chance": 0.2},
+            {"item_id": "silver_ring_plain", "chance": 0.1}
+        ],
         "xp_value": 25
     },
     "marauder_reaver": {
@@ -70,7 +84,12 @@ ENEMY_TEMPLATES = {
         "health": 30,
         "attack_min": 5,
         "attack_max": 8,
-        "loot_table": ["orcish_hand_axe", "hide_armor_crude", "ration_pack_basic", "pearl_small"],
+        "loot_table": [
+            {"item_id": "orcish_hand_axe", "chance": 0.5},
+            {"item_id": "hide_armor_crude", "chance": 0.4},
+            {"item_id": "ration_pack_basic", "chance": 0.3},
+            {"item_id": "pearl_small", "chance": 0.05}
+        ],
         "xp_value": 35
     },
     "rogue_scout": {
@@ -80,7 +99,11 @@ ENEMY_TEMPLATES = {
         "health": 20,
         "attack_min": 3,
         "attack_max": 6,
-        "loot_table": ["short_sword_iron", "shadowroot_bark", "string_piece"],
+        "loot_table": [
+            {"item_id": "short_sword_iron", "chance": 0.5},
+            {"item_id": "shadowroot_bark", "chance": 0.3},
+            {"item_id": "string_piece", "chance": 0.7}
+        ],
         "xp_value": 22
     },
 
@@ -90,9 +113,14 @@ ENEMY_TEMPLATES = {
         "name": "Cultist Acolyte",
         "description": "A hooded figure muttering dark incantations, weakly flinging minor curses.",
         "health": 16,
-        "attack_min": 1, # Magical attack
+        "attack_min": 1,
         "attack_max": 4,
-        "loot_table": ["rusty_dagger", "mage_robe_novice", "brimstone_dust", "note_smudged_warning"],
+        "loot_table": [
+            {"item_id": "rusty_dagger", "chance": 0.6},
+            {"item_id": "mage_robe_novice", "chance": 0.3},
+            {"item_id": "brimstone_dust", "chance": 0.4},
+            {"item_id": "note_smudged_warning", "chance": 0.1}
+        ],
         "xp_value": 12
     },
     "hedge_mage": {
@@ -100,9 +128,14 @@ ENEMY_TEMPLATES = {
         "name": "Hedge Mage",
         "description": "A self-taught magic user with unpredictable but sometimes potent spells.",
         "health": 25,
-        "attack_min": 3, # Magical attack
+        "attack_min": 3,
         "attack_max": 7,
-        "loot_table": ["staff_apprentice", "scroll_fire_dart", "moonbloom_flower", "crystal_shard_mundane"],
+        "loot_table": [
+            {"item_id": "staff_apprentice", "chance": 0.4},
+            {"item_id": "scroll_fire_dart", "chance": 0.2},
+            {"item_id": "moonbloom_flower", "chance": 0.5},
+            {"item_id": "crystal_shard_mundane", "chance": 0.3}
+        ],
         "xp_value": 30
     },
     "necromancer_apprentice": {
@@ -110,9 +143,14 @@ ENEMY_TEMPLATES = {
         "name": "Necromancer's Apprentice",
         "description": "A grim figure dabbling in the forbidden arts of necromancy, often accompanied by reanimated vermin.",
         "health": 28,
-        "attack_min": 2, # Magical attack, might summon weak undead
+        "attack_min": 2,
         "attack_max": 6,
-        "loot_table": ["bone_fragment", "ectoplasm_vial", "scroll_light", "tales_of_gaiatheia_vol1"],
+        "loot_table": [
+            {"item_id": "bone_fragment", "chance": 0.8},
+            {"item_id": "ectoplasm_vial", "chance": 0.3},
+            {"item_id": "scroll_light", "chance": 0.2},
+            {"item_id": "tales_of_gaiatheia_vol1", "chance": 0.05}
+        ],
         "xp_value": 40
     },
     "shaman_initiate": {
@@ -121,8 +159,13 @@ ENEMY_TEMPLATES = {
         "description": "A tribal shaman-in-training, calling upon minor nature spirits for aid.",
         "health": 22,
         "attack_min": 2,
-        "attack_max": 5, # Mix of physical and nature magic
-        "loot_table": ["wooden_club", "herbal_poultice", "fey_dust", "animal_hide_small"],
+        "attack_max": 5,
+        "loot_table": [
+            {"item_id": "wooden_club", "chance": 0.5},
+            {"item_id": "herbal_poultice", "chance": 0.4},
+            {"item_id": "fey_dust", "chance": 0.3},
+            {"item_id": "animal_hide_small", "chance": 0.6}
+        ],
         "xp_value": 28
     },
     "alchemist_journeyman": {
@@ -131,8 +174,13 @@ ENEMY_TEMPLATES = {
         "description": "An alchemist who might throw unstable concoctions or use a blade coated in irritants.",
         "health": 26,
         "attack_min": 3,
-        "attack_max": 6, # Can throw potions
-        "loot_table": ["steel_dagger", "antidote_simple", "sunpetal_leaf", "mortar_pestle_stone"],
+        "attack_max": 6,
+        "loot_table": [
+            {"item_id": "steel_dagger", "chance": 0.4},
+            {"item_id": "antidote_simple", "chance": 0.3},
+            {"item_id": "sunpetal_leaf", "chance": 0.5},
+            {"item_id": "mortar_pestle_stone", "chance": 0.1}
+        ],
         "xp_value": 32
     },
 
@@ -144,7 +192,11 @@ ENEMY_TEMPLATES = {
         "health": 18,
         "attack_min": 3,
         "attack_max": 5,
-        "loot_table": ["wolf_pelt", "animal_hide_small", "bone_fragment"],
+        "loot_table": [
+            {"item_id": "wolf_pelt", "chance": 0.7},
+            {"item_id": "animal_hide_small", "chance": 0.5},
+            {"item_id": "bone_fragment", "chance": 0.4}
+        ],
         "xp_value": 12
     },
     "giant_spider_webspinner": {
@@ -153,8 +205,11 @@ ENEMY_TEMPLATES = {
         "description": "A large, eight-legged horror that can ensnare prey in sticky webs.",
         "health": 22,
         "attack_min": 4,
-        "attack_max": 6, # Might have a web attack
-        "loot_table": ["spider_silk_strand", "bat_wing"], # Bat wings from caught prey
+        "attack_max": 6,
+        "loot_table": [
+            {"item_id": "spider_silk_strand", "chance": 0.9},
+            {"item_id": "bat_wing", "chance": 0.3}
+        ],
         "xp_value": 20
     },
     "wild_boar": {
@@ -164,17 +219,24 @@ ENEMY_TEMPLATES = {
         "health": 30,
         "attack_min": 4,
         "attack_max": 7,
-        "loot_table": ["animal_hide_small", "bone_fragment", "berries_wild"], # Boars might eat berries
+        "loot_table": [
+            {"item_id": "animal_hide_small", "chance": 0.7},
+            {"item_id": "bone_fragment", "chance": 0.5},
+            {"item_id": "berries_wild", "chance": 0.3}
+        ],
         "xp_value": 25
     },
     "cave_bat_swarm": {
         "id": "cave_bat_swarm",
         "name": "Cave Bat Swarm",
         "description": "A disorienting swarm of screeching cave bats.",
-        "health": 12, # Swarm health
-        "attack_min": 1, # Many small attacks
+        "health": 12,
+        "attack_min": 1,
         "attack_max": 3,
-        "loot_table": ["bat_wing", "rat_tail"], # Things found in caves
+        "loot_table": [
+            {"item_id": "bat_wing", "chance": 0.9},
+            {"item_id": "rat_tail", "chance": 0.2}
+        ],
         "xp_value": 8
     },
     "dire_wolf_alpha": {
@@ -184,7 +246,11 @@ ENEMY_TEMPLATES = {
         "health": 40,
         "attack_min": 5,
         "attack_max": 9,
-        "loot_table": ["wolf_pelt", "bone_fragment", "healing_salve_minor"], # Might carry something from a past victim
+        "loot_table": [
+            {"item_id": "wolf_pelt", "chance": 0.8},
+            {"item_id": "bone_fragment", "chance": 0.5},
+            {"item_id": "healing_salve_minor", "chance": 0.15}
+        ],
         "xp_value": 50
     },
     "forest_bear_cub": {
@@ -194,7 +260,10 @@ ENEMY_TEMPLATES = {
         "health": 15,
         "attack_min": 2,
         "attack_max": 4,
-        "loot_table": ["animal_hide_small", "fish_bones"],
+        "loot_table": [
+            {"item_id": "animal_hide_small", "chance": 0.6},
+            {"item_id": "fish_bones", "chance": 0.4}
+        ],
         "xp_value": 10
     },
     "forest_bear_mother": {
@@ -204,7 +273,11 @@ ENEMY_TEMPLATES = {
         "health": 70,
         "attack_min": 7,
         "attack_max": 12,
-        "loot_table": ["animal_hide_small", "healing_potion_lesser", "ration_pack_basic"], # Could have items from adventurers
+        "loot_table": [
+            {"item_id": "animal_hide_small", "chance": 0.8},
+            {"item_id": "healing_potion_lesser", "chance": 0.1},
+            {"item_id": "ration_pack_basic", "chance": 0.2}
+        ],
         "xp_value": 100
     },
     "giant_rat": {
@@ -214,7 +287,11 @@ ENEMY_TEMPLATES = {
         "health": 10,
         "attack_min": 1,
         "attack_max": 3,
-        "loot_table": ["rat_tail", "bone_fragment", "moldy_bread_crust"],
+        "loot_table": [
+            {"item_id": "rat_tail", "chance": 0.9},
+            {"item_id": "bone_fragment", "chance": 0.3},
+            {"item_id": "moldy_bread_crust", "chance": 0.5}
+        ],
         "xp_value": 5
     },
     "venomous_snake": {
@@ -223,9 +300,12 @@ ENEMY_TEMPLATES = {
         "description": "A camouflaged snake with a poisonous bite.",
         "health": 12,
         "attack_min": 1,
-        "attack_max": 2, # Main damage from poison
+        "attack_max": 2,
         "special_attack": "poison_bite",
-        "loot_table": ["antidote_simple", "string_piece"], # Antidote is ironic or from a previous victim
+        "loot_table": [
+            {"item_id": "antidote_simple", "chance": 0.2},
+            {"item_id": "string_piece", "chance": 0.4}
+        ],
         "xp_value": 15
     },
     "woodland_sprite": {
@@ -234,8 +314,12 @@ ENEMY_TEMPLATES = {
         "description": "A small, mischievous fey creature of the forest, flitting through the trees.",
         "health": 10,
         "attack_min": 1,
-        "attack_max": 3, # Magical, nature-based
-        "loot_table": ["fey_dust", "berries_wild", "pebble_shiny"],
+        "attack_max": 3,
+        "loot_table": [
+            {"item_id": "fey_dust", "chance": 0.7},
+            {"item_id": "berries_wild", "chance": 0.5},
+            {"item_id": "pebble_shiny", "chance": 0.3}
+        ],
         "xp_value": 12
     },
 
@@ -248,7 +332,11 @@ ENEMY_TEMPLATES = {
         "health": 28,
         "attack_min": 3,
         "attack_max": 6,
-        "loot_table": ["animal_hide_small", "fish_bones", "seaweed_clump"],
+        "loot_table": [
+            {"item_id": "animal_hide_small", "chance": 0.7},
+            {"item_id": "fish_bones", "chance": 0.4},
+            {"item_id": "seaweed_clump", "chance": 0.6}
+        ],
         "xp_value": 22
     },
     "giant_leech": {
@@ -256,9 +344,11 @@ ENEMY_TEMPLATES = {
         "name": "Giant Leech",
         "description": "A disgustingly large leech that drains blood from its victims.",
         "health": 15,
-        "attack_min": 2, # Drains health
+        "attack_min": 2,
         "attack_max": 4,
-        "loot_table": ["ectoplasm_vial"], # Leeches are slimy
+        "loot_table": [
+            {"item_id": "ectoplasm_vial", "chance": 0.2}
+        ],
         "xp_value": 10
     },
     "bog_imp": {
@@ -268,7 +358,11 @@ ENEMY_TEMPLATES = {
         "health": 12,
         "attack_min": 1,
         "attack_max": 3,
-        "loot_table": ["clay_lump", "brimstone_dust", "rusted_nail"],
+        "loot_table": [
+            {"item_id": "clay_lump", "chance": 0.8},
+            {"item_id": "brimstone_dust", "chance": 0.3},
+            {"item_id": "rusted_nail", "chance": 0.5}
+        ],
         "xp_value": 9
     },
     "mud_golem_lesser": {
@@ -278,17 +372,24 @@ ENEMY_TEMPLATES = {
         "health": 35,
         "attack_min": 4,
         "attack_max": 7,
-        "loot_table": ["clay_lump", "crystal_shard_mundane", "seaweed_clump"],
+        "loot_table": [
+            {"item_id": "clay_lump", "chance": 0.9},
+            {"item_id": "crystal_shard_mundane", "chance": 0.2},
+            {"item_id": "seaweed_clump", "chance": 0.4}
+        ],
         "xp_value": 30
     },
     "will_o_wisp": {
         "id": "will_o_wisp",
         "name": "Will-o'-Wisp",
         "description": "A faintly glowing light that lures travelers to their doom in hazardous terrain.",
-        "health": 8, # Hard to hit
-        "attack_min": 2, # Energy drain
+        "health": 8,
+        "attack_min": 2,
         "attack_max": 5,
-        "loot_table": ["fey_dust", "ectoplasm_vial"],
+        "loot_table": [
+            {"item_id": "fey_dust", "chance": 0.5},
+            {"item_id": "ectoplasm_vial", "chance": 0.3}
+        ],
         "xp_value": 25
     },
 
@@ -300,7 +401,11 @@ ENEMY_TEMPLATES = {
         "health": 20,
         "attack_min": 3,
         "attack_max": 6,
-        "loot_table": ["animal_hide_small", "bone_fragment", "iron_ore"], # Found in mountains
+        "loot_table": [
+            {"item_id": "animal_hide_small", "chance": 0.7},
+            {"item_id": "bone_fragment", "chance": 0.5},
+            {"item_id": "iron_ore", "chance": 0.1}
+        ],
         "xp_value": 15
     },
     "cave_bear": {
@@ -310,7 +415,12 @@ ENEMY_TEMPLATES = {
         "health": 75,
         "attack_min": 8,
         "attack_max": 13,
-        "loot_table": ["animal_hide_small", "bone_fragment", "healing_potion_lesser", "gold_nugget_small"], # Hoards shiny things
+        "loot_table": [
+            {"item_id": "animal_hide_small", "chance": 0.8},
+            {"item_id": "bone_fragment", "chance": 0.6},
+            {"item_id": "healing_potion_lesser", "chance": 0.15},
+            {"item_id": "gold_nugget_small", "chance": 0.05}
+        ],
         "xp_value": 110
     },
     "harpy_scout": {
@@ -320,7 +430,11 @@ ENEMY_TEMPLATES = {
         "health": 25,
         "attack_min": 4,
         "attack_max": 7,
-        "loot_table": ["pebble_shiny", "torn_rag", "ivory_figurine_crude"], # Steals trinkets
+        "loot_table": [
+            {"item_id": "pebble_shiny", "chance": 0.4},
+            {"item_id": "torn_rag", "chance": 0.6},
+            {"item_id": "ivory_figurine_crude", "chance": 0.1}
+        ],
         "xp_value": 35
     },
     "stone_elemental_shardling": {
@@ -330,17 +444,26 @@ ENEMY_TEMPLATES = {
         "health": 30,
         "attack_min": 3,
         "attack_max": 6,
-        "loot_table": ["iron_ore", "copper_ore", "crystal_shard_mundane", "gem_amethyst_rough"],
+        "loot_table": [
+            {"item_id": "iron_ore", "chance": 0.5},
+            {"item_id": "copper_ore", "chance": 0.4},
+            {"item_id": "crystal_shard_mundane", "chance": 0.3},
+            {"item_id": "gem_amethyst_rough", "chance": 0.1}
+        ],
         "xp_value": 28
     },
-    "dwarven_mine_crawler": { # Spider variant for mines
+    "dwarven_mine_crawler": {
         "id": "dwarven_mine_crawler",
         "name": "Dwarven Mine Crawler",
         "description": "A hardy, rock-colored spider adapted to life in dark mine shafts.",
         "health": 20,
         "attack_min": 3,
         "attack_max": 5,
-        "loot_table": ["spider_silk_strand", "iron_ore", "dull_arrowhead"],
+        "loot_table": [
+            {"item_id": "spider_silk_strand", "chance": 0.8},
+            {"item_id": "iron_ore", "chance": 0.2},
+            {"item_id": "dull_arrowhead", "chance": 0.5}
+        ],
         "xp_value": 18
     },
 
@@ -352,7 +475,12 @@ ENEMY_TEMPLATES = {
         "health": 18,
         "attack_min": 3,
         "attack_max": 6,
-        "loot_table": ["rusty_dagger", "wooden_shield_round", "bone_fragment", "tarnished_old_coin"],
+        "loot_table": [
+            {"item_id": "rusty_dagger", "chance": 0.5},
+            {"item_id": "wooden_shield_round", "chance": 0.2},
+            {"item_id": "bone_fragment", "chance": 0.7},
+            {"item_id": "tarnished_old_coin", "chance": 0.4}
+        ],
         "xp_value": 20
     },
     "zombie_shambler": {
@@ -362,7 +490,11 @@ ENEMY_TEMPLATES = {
         "health": 25,
         "attack_min": 2,
         "attack_max": 5,
-        "loot_table": ["torn_rag", "chipped_mug", "ectoplasm_vial"],
+        "loot_table": [
+            {"item_id": "torn_rag", "chance": 0.8},
+            {"item_id": "chipped_mug", "chance": 0.3},
+            {"item_id": "ectoplasm_vial", "chance": 0.1}
+        ],
         "xp_value": 15
     },
     "ghoul_scavenger": {
@@ -371,18 +503,27 @@ ENEMY_TEMPLATES = {
         "description": "A vile undead creature that feeds on carrion, its touch can paralyze.",
         "health": 30,
         "attack_min": 4,
-        "attack_max": 7, # Paralysis chance
-        "loot_table": ["bone_fragment", "rat_tail", "hermits_lost_locket"], # Might have items from its victims
+        "attack_max": 7,
+        "loot_table": [
+            {"item_id": "bone_fragment", "chance": 0.7},
+            {"item_id": "rat_tail", "chance": 0.5},
+            {"item_id": "hermits_lost_locket", "chance": 0.05}
+        ],
         "xp_value": 40
     },
     "wraith_shadow": {
         "id": "wraith_shadow",
         "name": "Shadow Wraith",
         "description": "An incorporeal undead spirit, its touch drains life force.",
-        "health": 35, # Potentially resistant to physical
-        "attack_min": 5, # Life drain
+        "health": 35,
+        "attack_min": 5,
         "attack_max": 8,
-        "loot_table": ["ectoplasm_vial", "fey_dust", "shadowroot_bark", "ancient_tome_cover"],
+        "loot_table": [
+            {"item_id": "ectoplasm_vial", "chance": 0.6},
+            {"item_id": "fey_dust", "chance": 0.3},
+            {"item_id": "shadowroot_bark", "chance": 0.2},
+            {"item_id": "ancient_tome_cover", "chance": 0.05}
+        ],
         "xp_value": 60
     },
     "skeletal_archer": {
@@ -391,8 +532,12 @@ ENEMY_TEMPLATES = {
         "description": "The reanimated bones of an archer, still clutching its bow.",
         "health": 15,
         "attack_min": 2,
-        "attack_max": 5, # Ranged
-        "loot_table": ["hunting_bow_simple", "bone_fragment", "dull_arrowhead"],
+        "attack_max": 5,
+        "loot_table": [
+            {"item_id": "hunting_bow_simple", "chance": 0.4},
+            {"item_id": "bone_fragment", "chance": 0.8},
+            {"item_id": "dull_arrowhead", "chance": 0.6}
+        ],
         "xp_value": 22
     },
 
@@ -403,8 +548,12 @@ ENEMY_TEMPLATES = {
         "description": "A small, mischievous creature wreathed in flames, hurling tiny fireballs.",
         "health": 14,
         "attack_min": 2,
-        "attack_max": 4, # Fire damage
-        "loot_table": ["brimstone_dust", "obsidian_shard", "glowing_ember_pendant"],
+        "attack_max": 4,
+        "loot_table": [
+            {"item_id": "brimstone_dust", "chance": 0.7},
+            {"item_id": "obsidian_shard", "chance": 0.2},
+            {"item_id": "glowing_ember_pendant", "chance": 0.05}
+        ],
         "xp_value": 18
     },
     "ice_sprite": {
@@ -413,8 +562,12 @@ ENEMY_TEMPLATES = {
         "description": "A delicate fey creature formed of ice, flinging sharp icicles.",
         "health": 12,
         "attack_min": 2,
-        "attack_max": 4, # Ice damage
-        "loot_table": ["fey_dust", "crystal_shard_mundane", "pearl_small"],
+        "attack_max": 4,
+        "loot_table": [
+            {"item_id": "fey_dust", "chance": 0.7},
+            {"item_id": "crystal_shard_mundane", "chance": 0.4},
+            {"item_id": "pearl_small", "chance": 0.05}
+        ],
         "xp_value": 17
     },
     "earth_wisp": {
@@ -424,17 +577,24 @@ ENEMY_TEMPLATES = {
         "health": 20,
         "attack_min": 2,
         "attack_max": 5,
-        "loot_table": ["clay_lump", "iron_ore", "pebble_shiny"],
+        "loot_table": [
+            {"item_id": "clay_lump", "chance": 0.6},
+            {"item_id": "iron_ore", "chance": 0.3},
+            {"item_id": "pebble_shiny", "chance": 0.5}
+        ],
         "xp_value": 15
     },
-    "air_current_lesser": { # Lesser air elemental
+    "air_current_lesser": {
         "id": "air_current_lesser",
         "name": "Lesser Air Current",
         "description": "A swirling vortex of air, difficult to strike.",
-        "health": 18, # High evasion
+        "health": 18,
         "attack_min": 1,
-        "attack_max": 4, # Pushing/buffeting attacks
-        "loot_table": ["fey_dust", "string_piece"],
+        "attack_max": 4,
+        "loot_table": [
+            {"item_id": "fey_dust", "chance": 0.4},
+            {"item_id": "string_piece", "chance": 0.3}
+        ],
         "xp_value": 20
     },
     "animated_armor_rusty": {
@@ -444,7 +604,12 @@ ENEMY_TEMPLATES = {
         "health": 40,
         "attack_min": 5,
         "attack_max": 8,
-        "loot_table": ["iron_ingot", "leather_scraps", "rusted_nail", "iron_helmet_basic"],
+        "loot_table": [
+            {"item_id": "iron_ingot", "chance": 0.3},
+            {"item_id": "leather_scraps", "chance": 0.4},
+            {"item_id": "rusted_nail", "chance": 0.7},
+            {"item_id": "iron_helmet_basic", "chance": 0.1}
+        ],
         "xp_value": 55
     },
 
@@ -455,8 +620,13 @@ ENEMY_TEMPLATES = {
         "description": "A hulking, green-skinned troll that demands a toll or a fight.",
         "health": 80,
         "attack_min": 7,
-        "attack_max": 12, # Regenerates health
-        "loot_table": ["wooden_club", "animal_hide_small", "gold_nugget_small", "chipped_mug"],
+        "attack_max": 12,
+        "loot_table": [
+            {"item_id": "wooden_club", "chance": 0.6},
+            {"item_id": "animal_hide_small", "chance": 0.5},
+            {"item_id": "gold_nugget_small", "chance": 0.15},
+            {"item_id": "chipped_mug", "chance": 0.3}
+        ],
         "xp_value": 120
     },
     "ogre_brute": {
@@ -466,7 +636,12 @@ ENEMY_TEMPLATES = {
         "health": 90,
         "attack_min": 9,
         "attack_max": 15,
-        "loot_table": ["wooden_club", "hide_armor_crude", "ration_pack_basic", "copper_goblet"],
+        "loot_table": [
+            {"item_id": "wooden_club", "chance": 0.7},
+            {"item_id": "hide_armor_crude", "chance": 0.4},
+            {"item_id": "ration_pack_basic", "chance": 0.3},
+            {"item_id": "copper_goblet", "chance": 0.1}
+        ],
         "xp_value": 150
     },
     "griffin_young": {
@@ -475,8 +650,12 @@ ENEMY_TEMPLATES = {
         "description": "A majestic creature with the body of a lion and the head and wings of an eagle, not yet fully grown but still dangerous.",
         "health": 65,
         "attack_min": 6,
-        "attack_max": 10, # Flying attacks
-        "loot_table": ["pebble_shiny", "bone_fragment", "ivory_figurine_crude"],
+        "attack_max": 10,
+        "loot_table": [
+            {"item_id": "pebble_shiny", "chance": 0.3},
+            {"item_id": "bone_fragment", "chance": 0.5},
+            {"item_id": "ivory_figurine_crude", "chance": 0.1}
+        ],
         "xp_value": 130
     },
     "wyvern_juvenile": {
@@ -485,8 +664,12 @@ ENEMY_TEMPLATES = {
         "description": "A smaller, two-legged dragon relative with a venomous sting in its tail.",
         "health": 70,
         "attack_min": 7,
-        "attack_max": 11, # Poisonous tail attack
-        "loot_table": ["animal_hide_small", "antidote_simple", "gem_amethyst_rough"],
+        "attack_max": 11,
+        "loot_table": [
+            {"item_id": "animal_hide_small", "chance": 0.6},
+            {"item_id": "antidote_simple", "chance": 0.2},
+            {"item_id": "gem_amethyst_rough", "chance": 0.1}
+        ],
         "xp_value": 140
     },
     "basilisk_lesser": {
@@ -495,8 +678,12 @@ ENEMY_TEMPLATES = {
         "description": "A reptilian beast whose gaze can turn flesh to stone, though this specimen's power is not fully developed.",
         "health": 50,
         "attack_min": 5,
-        "attack_max": 8, # Gaze attack (petrification chance)
-        "loot_table": ["animal_hide_small", "crystal_shard_mundane", "clay_lump"], # Petrified victims might drop clay-like substance
+        "attack_max": 8,
+        "loot_table": [
+            {"item_id": "animal_hide_small", "chance": 0.5},
+            {"item_id": "crystal_shard_mundane", "chance": 0.3},
+            {"item_id": "clay_lump", "chance": 0.4}
+        ],
         "xp_value": 90
     },
 
@@ -506,19 +693,29 @@ ENEMY_TEMPLATES = {
         "name": "Minor Goblin Shaman",
         "description": "A goblin dabbling in crude shamanistic magic, often chattering incantations.",
         "health": 18,
-        "attack_min": 2, # Weak magic
+        "attack_min": 2,
         "attack_max": 5,
-        "loot_table": ["goblin_ear", "staff_apprentice", "bone_fragment", "fey_dust"],
+        "loot_table": [
+            {"item_id": "goblin_ear", "chance": 0.8},
+            {"item_id": "staff_apprentice", "chance": 0.2},
+            {"item_id": "bone_fragment", "chance": 0.5},
+            {"item_id": "fey_dust", "chance": 0.3}
+        ],
         "xp_value": 20
     },
     "goblin_wolfrider": {
         "id": "goblin_wolfrider",
         "name": "Goblin Wolfrider",
         "description": "A goblin mounted on a snarling forest wolf, a fast and dangerous skirmisher.",
-        "health": 30, # Combined health or goblin + wolf
+        "health": 30,
         "attack_min": 4,
         "attack_max": 7,
-        "loot_table": ["goblin_ear", "spear_common", "wolf_pelt", "leather_scraps"],
+        "loot_table": [
+            {"item_id": "goblin_ear", "chance": 0.7},
+            {"item_id": "spear_common", "chance": 0.3},
+            {"item_id": "wolf_pelt", "chance": 0.4},
+            {"item_id": "leather_scraps", "chance": 0.3}
+        ],
         "xp_value": 45
     },
     "orc_berserker": {
@@ -527,8 +724,13 @@ ENEMY_TEMPLATES = {
         "description": "A fearsome orc warrior who flies into a battle rage, shrugging off wounds.",
         "health": 50,
         "attack_min": 6,
-        "attack_max": 10, # Damage increases when enraged
-        "loot_table": ["orcish_hand_axe", "hide_armor_crude", "strength_potion_fleeting", "iron_ingot"],
+        "attack_max": 10,
+        "loot_table": [
+            {"item_id": "orcish_hand_axe", "chance": 0.6},
+            {"item_id": "hide_armor_crude", "chance": 0.3},
+            {"item_id": "strength_potion_fleeting", "chance": 0.1},
+            {"item_id": "iron_ingot", "chance": 0.15}
+        ],
         "xp_value": 70
     },
     "orc_warrior": {
@@ -538,7 +740,12 @@ ENEMY_TEMPLATES = {
         "health": 45,
         "attack_min": 5,
         "attack_max": 9,
-        "loot_table": ["short_sword_iron", "chainmail_vest", "iron_helmet_basic", "ration_pack_basic"],
+        "loot_table": [
+            {"item_id": "short_sword_iron", "chance": 0.5},
+            {"item_id": "chainmail_vest", "chance": 0.1},
+            {"item_id": "iron_helmet_basic", "chance": 0.15},
+            {"item_id": "ration_pack_basic", "chance": 0.2}
+        ],
         "xp_value": 60
     },
     "orc_shaman": {
@@ -546,9 +753,15 @@ ENEMY_TEMPLATES = {
         "name": "Orc Shaman",
         "description": "An orcish spiritual leader, channeling primal energies and elemental fury.",
         "health": 40,
-        "attack_min": 4, # Magical
+        "attack_min": 4,
         "attack_max": 8,
-        "loot_table": ["staff_apprentice", "herbal_poultice", "brimstone_dust", "moonbloom_flower", "charm_of_minor_warding"],
+        "loot_table": [
+            {"item_id": "staff_apprentice", "chance": 0.3},
+            {"item_id": "herbal_poultice", "chance": 0.4},
+            {"item_id": "brimstone_dust", "chance": 0.2},
+            {"item_id": "moonbloom_flower", "chance": 0.3},
+            {"item_id": "charm_of_minor_warding", "chance": 0.05}
+        ],
         "xp_value": 75
     },
 
@@ -559,8 +772,11 @@ ENEMY_TEMPLATES = {
         "description": "A venomous viper that buries itself in the sand, striking unsuspecting prey.",
         "health": 15,
         "attack_min": 2,
-        "attack_max": 4, # Poisonous
-        "loot_table": ["antidote_simple", "obsidian_shard"],
+        "attack_max": 4,
+        "loot_table": [
+            {"item_id": "antidote_simple", "chance": 0.3},
+            {"item_id": "obsidian_shard", "chance": 0.1}
+        ],
         "xp_value": 20
     },
     "desert_scorpion_giant": {
@@ -569,18 +785,27 @@ ENEMY_TEMPLATES = {
         "description": "A massive scorpion with a deadly stinger, common in arid wastelands.",
         "health": 30,
         "attack_min": 4,
-        "attack_max": 7, # Stinger attack (poison)
-        "loot_table": ["crab_chitin_fragment", "brimstone_dust", "antidote_simple"], # Chitin is similar
+        "attack_max": 7,
+        "loot_table": [
+            {"item_id": "crab_chitin_fragment", "chance": 0.5}, 
+            {"item_id": "brimstone_dust", "chance": 0.2},
+            {"item_id": "antidote_simple", "chance": 0.1}
+        ],
         "xp_value": 35
     },
-    "dune_stalker": { # Lizard/humanoid blend
+    "dune_stalker": {
         "id": "dune_stalker",
         "name": "Dune Stalker",
         "description": "A reptilian humanoid adapted to desert life, known for ambushes.",
         "health": 28,
         "attack_min": 4,
         "attack_max": 6,
-        "loot_table": ["spear_common", "leather_scraps", "empty_waterskin", "spices_exotic_pouch"],
+        "loot_table": [
+            {"item_id": "spear_common", "chance": 0.4},
+            {"item_id": "leather_scraps", "chance": 0.5},
+            {"item_id": "empty_waterskin", "chance": 0.3},
+            {"item_id": "spices_exotic_pouch", "chance": 0.05}
+        ],
         "xp_value": 30
     },
     "mummy_lesser": {
@@ -589,8 +814,13 @@ ENEMY_TEMPLATES = {
         "description": "An ancient corpse preserved by desert sands and dark rituals, shambling forth with surprising strength.",
         "health": 40,
         "attack_min": 5,
-        "attack_max": 8, # Curse chance
-        "loot_table": ["torn_rag", "ancient_coin_tarnished", "gold_nugget_small", "brimstone_dust"],
+        "attack_max": 8,
+        "loot_table": [
+            {"item_id": "torn_rag", "chance": 0.9},
+            {"item_id": "old_coin_tarnished", "chance": 0.3}, 
+            {"item_id": "gold_nugget_small", "chance": 0.1},
+            {"item_id": "brimstone_dust", "chance": 0.15}
+        ],
         "xp_value": 55
     },
     "sand_elemental_minor": {
@@ -599,8 +829,12 @@ ENEMY_TEMPLATES = {
         "description": "A swirling vortex of sand and grit, animated by desert magic.",
         "health": 25,
         "attack_min": 3,
-        "attack_max": 6, # Blinding sand attack
-        "loot_table": ["crystal_shard_mundane", "obsidian_shard", "gem_amethyst_rough"],
+        "attack_max": 6,
+        "loot_table": [
+            {"item_id": "crystal_shard_mundane", "chance": 0.4},
+            {"item_id": "obsidian_shard", "chance": 0.3},
+            {"item_id": "gem_amethyst_rough", "chance": 0.1}
+        ],
         "xp_value": 33
     },
 
@@ -612,7 +846,11 @@ ENEMY_TEMPLATES = {
         "health": 35,
         "attack_min": 5,
         "attack_max": 8,
-        "loot_table": ["crab_chitin_fragment", "pearl_small", "seaweed_clump"],
+        "loot_table": [
+            {"item_id": "crab_chitin_fragment", "chance": 0.8},
+            {"item_id": "pearl_small", "chance": 0.1},
+            {"item_id": "seaweed_clump", "chance": 0.5}
+        ],
         "xp_value": 40
     },
     "sea_serpent_hatchling": {
@@ -622,7 +860,11 @@ ENEMY_TEMPLATES = {
         "health": 45,
         "attack_min": 6,
         "attack_max": 9,
-        "loot_table": ["fish_bones", "naiad_scale_shimmering", "broken_shell"],
+        "loot_table": [
+            {"item_id": "fish_bones", "chance": 0.6},
+            {"item_id": "naiad_scale_shimmering", "chance": 0.15},
+            {"item_id": "broken_shell", "chance": 0.4}
+        ],
         "xp_value": 65
     },
     "merfolk_warrior_hostile": {
@@ -632,27 +874,40 @@ ENEMY_TEMPLATES = {
         "health": 30,
         "attack_min": 4,
         "attack_max": 7,
-        "loot_table": ["spear_common", "broken_shell", "pearl_small", "seaweed_clump"], # Trident could be a spear
+        "loot_table": [
+            {"item_id": "spear_common", "chance": 0.4},
+            {"item_id": "broken_shell", "chance": 0.6},
+            {"item_id": "pearl_small", "chance": 0.1},
+            {"item_id": "seaweed_clump", "chance": 0.5}
+        ],
         "xp_value": 40
     },
     "sunken_sailor_ghost": {
         "id": "sunken_sailor_ghost",
         "name": "Sunken Sailor's Ghost",
         "description": "The spectral remnant of a drowned sailor, bound to a shipwreck or coastline.",
-        "health": 25, # Incorporeal
-        "attack_min": 3, # Chilling touch
+        "health": 25,
+        "attack_min": 3,
         "attack_max": 6,
-        "loot_table": ["ectoplasm_vial", "tarnished_old_coin", "rusted_nail", "sealed_message_for_captain"], # From its ship
+        "loot_table": [
+            {"item_id": "ectoplasm_vial", "chance": 0.5},
+            {"item_id": "old_coin_tarnished", "chance": 0.3},
+            {"item_id": "rusted_nail", "chance": 0.4},
+            {"item_id": "sealed_message_for_captain", "chance": 0.05}
+        ],
         "xp_value": 38
     },
-    "kraken_tentacle_small": { # Part of a larger theoretical boss
+    "kraken_tentacle_small": {
         "id": "kraken_tentacle_small",
         "name": "Small Kraken Tentacle",
         "description": "A writhing tentacle from a much larger horror of the deep, lashing out from the water.",
         "health": 50,
         "attack_min": 7,
         "attack_max": 10,
-        "loot_table": ["seaweed_clump", "fish_bones"],
+        "loot_table": [
+            {"item_id": "seaweed_clump", "chance": 0.7},
+            {"item_id": "fish_bones", "chance": 0.5}
+        ],
         "xp_value": 70
     },
 
@@ -663,8 +918,13 @@ ENEMY_TEMPLATES = {
         "description": "A wolf twisted by dark magic, its fur matted and eyes glowing with malevolence.",
         "health": 25,
         "attack_min": 4,
-        "attack_max": 6, # Possible disease or curse on hit
-        "loot_table": ["wolf_pelt", "bone_fragment", "shadowroot_bark", "brimstone_dust"],
+        "attack_max": 6,
+        "loot_table": [
+            {"item_id": "wolf_pelt", "chance": 0.6},
+            {"item_id": "bone_fragment", "chance": 0.4},
+            {"item_id": "shadowroot_bark", "chance": 0.3},
+            {"item_id": "brimstone_dust", "chance": 0.1}
+        ],
         "xp_value": 28
     },
     "corrupted_sprite": {
@@ -673,8 +933,12 @@ ENEMY_TEMPLATES = {
         "description": "A once benign fey creature, now warped into a spiteful being by dark influence.",
         "health": 15,
         "attack_min": 2,
-        "attack_max": 5, # Dark magic
-        "loot_table": ["fey_dust", "ectoplasm_vial", "shadowroot_bark"],
+        "attack_max": 5,
+        "loot_table": [
+            {"item_id": "fey_dust", "chance": 0.6},
+            {"item_id": "ectoplasm_vial", "chance": 0.2},
+            {"item_id": "shadowroot_bark", "chance": 0.4}
+        ],
         "xp_value": 20
     },
     "blighted_treant_sapling": {
@@ -684,7 +948,11 @@ ENEMY_TEMPLATES = {
         "health": 40,
         "attack_min": 5,
         "attack_max": 8,
-        "loot_table": ["timber_rough", "shadowroot_bark", "moonbloom_flower"], # Flowers might grow on it
+        "loot_table": [
+            {"item_id": "timber_rough", "chance": 0.7},
+            {"item_id": "shadowroot_bark", "chance": 0.5},
+            {"item_id": "moonbloom_flower", "chance": 0.2}
+        ],
         "xp_value": 50
     },
     "shadow_hound": {
@@ -693,8 +961,12 @@ ENEMY_TEMPLATES = {
         "description": "A canine beast made of solidified shadow, its bite chills to the bone.",
         "health": 30,
         "attack_min": 4,
-        "attack_max": 7, # Cold damage, can be hard to see
-        "loot_table": ["ectoplasm_vial", "fey_dust", "shadowroot_bark"],
+        "attack_max": 7,
+        "loot_table": [
+            {"item_id": "ectoplasm_vial", "chance": 0.4},
+            {"item_id": "fey_dust", "chance": 0.3},
+            {"item_id": "shadowroot_bark", "chance": 0.2}
+        ],
         "xp_value": 45
     },
     "diseased_giant_rat": {
@@ -703,8 +975,12 @@ ENEMY_TEMPLATES = {
         "description": "A bloated giant rat, its bite carries a nasty infection.",
         "health": 12,
         "attack_min": 1,
-        "attack_max": 3, # Disease on hit
-        "loot_table": ["rat_tail", "bone_fragment", "antidote_simple"], # Ironically
+        "attack_max": 3,
+        "loot_table": [
+            {"item_id": "rat_tail", "chance": 0.8},
+            {"item_id": "bone_fragment", "chance": 0.3},
+            {"item_id": "antidote_simple", "chance": 0.1}
+        ],
         "xp_value": 7
     },
 
@@ -716,7 +992,12 @@ ENEMY_TEMPLATES = {
         "health": 120,
         "attack_min": 10,
         "attack_max": 18,
-        "loot_table": ["iron_ingot", "crystal_shard_mundane", "gem_amethyst_rough", "repair_kit_basic"],
+        "loot_table": [
+            {"item_id": "iron_ingot", "chance": 0.7},
+            {"item_id": "crystal_shard_mundane", "chance": 0.3},
+            {"item_id": "gem_amethyst_rough", "chance": 0.1},
+            {"item_id": "repair_kit_basic", "chance": 0.05}
+        ],
         "xp_value": 200
     },
     "manticore_young": {
@@ -724,10 +1005,15 @@ ENEMY_TEMPLATES = {
         "name": "Young Manticore",
         "description": "A beast with a human-like head, lion's body, and scorpion's tail that can fire spikes.",
         "health": 90,
-        "attack_min": 8, # Melee
+        "attack_min": 8,
         "attack_max": 12,
-        "special_attack": "tail_spikes", # Ranged attack
-        "loot_table": ["animal_hide_small", "bone_fragment", "obsidian_shard", "spices_exotic_pouch"],
+        "special_attack": "tail_spikes",
+        "loot_table": [
+            {"item_id": "animal_hide_small", "chance": 0.5},
+            {"item_id": "bone_fragment", "chance": 0.4},
+            {"item_id": "obsidian_shard", "chance": 0.2},
+            {"item_id": "spices_exotic_pouch", "chance": 0.05}
+        ],
         "xp_value": 180
     },
     "elemental_guardian_lesser_fire": {
@@ -735,29 +1021,44 @@ ENEMY_TEMPLATES = {
         "name": "Lesser Fire Elemental Guardian",
         "description": "A humanoid figure made of roiling flame, guarding an ancient place.",
         "health": 70,
-        "attack_min": 7, # Fire damage
+        "attack_min": 7,
         "attack_max": 11,
-        "loot_table": ["brimstone_dust", "obsidian_shard", "glowing_ember_pendant", "scroll_fire_dart"],
+        "loot_table": [
+            {"item_id": "brimstone_dust", "chance": 0.8},
+            {"item_id": "obsidian_shard", "chance": 0.4},
+            {"item_id": "glowing_ember_pendant", "chance": 0.1},
+            {"item_id": "scroll_fire_dart", "chance": 0.05}
+        ],
         "xp_value": 150
     },
-    "frost_giant_scout": { # From list
+    "frost_giant_scout": {
         "id": "frost_giant_scout",
         "name": "Frost Giant Scout",
         "description": "A towering giant from the frozen wastes, wielding a massive icy club or axe.",
         "health": 150,
         "attack_min": 12,
-        "attack_max": 20, # Cold damage
-        "loot_table": ["hide_armor_crude", "iron_ingot", "gem_amethyst_rough", "healing_potion_lesser"],
+        "attack_max": 20,
+        "loot_table": [
+            {"item_id": "hide_armor_crude", "chance": 0.3},
+            {"item_id": "iron_ingot", "chance": 0.2},
+            {"item_id": "gem_amethyst_rough", "chance": 0.1},
+            {"item_id": "healing_potion_lesser", "chance": 0.1}
+        ],
         "xp_value": 250
     },
-    "ethereal_weaver_minion": { # From list
+    "ethereal_weaver_minion": {
         "id": "ethereal_weaver_minion",
         "name": "Ethereal Weaver Minion",
         "description": "A spectral, spider-like being that drifts between planes, its touch disorienting.",
-        "health": 60, # Partially ethereal
+        "health": 60,
         "attack_min": 6,
-        "attack_max": 10, # Confusion/debuff chance
-        "loot_table": ["ectoplasm_vial", "fey_dust", "spider_silk_strand", "crystal_shard_mundane"],
+        "attack_max": 10,
+        "loot_table": [
+            {"item_id": "ectoplasm_vial", "chance": 0.7},
+            {"item_id": "fey_dust", "chance": 0.5},
+            {"item_id": "spider_silk_strand", "chance": 0.3},
+            {"item_id": "crystal_shard_mundane", "chance": 0.2}
+        ],
         "xp_value": 160
     },
 
@@ -769,7 +1070,13 @@ ENEMY_TEMPLATES = {
         "health": 55,
         "attack_min": 6,
         "attack_max": 9,
-        "loot_table": ["short_sword_iron", "chainmail_vest", "wooden_shield_round", "ration_pack_basic", "silver_ring_plain"],
+        "loot_table": [
+            {"item_id": "short_sword_iron", "chance": 0.4},
+            {"item_id": "chainmail_vest", "chance": 0.15},
+            {"item_id": "wooden_shield_round", "chance": 0.2},
+            {"item_id": "ration_pack_basic", "chance": 0.3},
+            {"item_id": "silver_ring_plain", "chance": 0.1}
+        ],
         "xp_value": 70
     },
     "mercenary_veteran": {
@@ -779,7 +1086,12 @@ ENEMY_TEMPLATES = {
         "health": 60,
         "attack_min": 7,
         "attack_max": 10,
-        "loot_table": ["steel_dagger", "iron_helmet_basic", "healing_salve_minor", "gold_nugget_small"],
+        "loot_table": [
+            {"item_id": "steel_dagger", "chance": 0.5},
+            {"item_id": "iron_helmet_basic", "chance": 0.2},
+            {"item_id": "healing_salve_minor", "chance": 0.3},
+            {"item_id": "gold_nugget_small", "chance": 0.15}
+        ],
         "xp_value": 80
     },
     "barbarian_raider": {
@@ -789,7 +1101,12 @@ ENEMY_TEMPLATES = {
         "health": 65,
         "attack_min": 8,
         "attack_max": 12,
-        "loot_table": ["orcish_hand_axe", "hide_armor_crude", "animal_hide_small", "strength_potion_fleeting"],
+        "loot_table": [
+            {"item_id": "orcish_hand_axe", "chance": 0.5},
+            {"item_id": "hide_armor_crude", "chance": 0.4},
+            {"item_id": "animal_hide_small", "chance": 0.3},
+            {"item_id": "strength_potion_fleeting", "chance": 0.1}
+        ],
         "xp_value": 90
     },
     "priest_fallen": {
@@ -797,9 +1114,15 @@ ENEMY_TEMPLATES = {
         "name": "Fallen Priest",
         "description": "A former priest who has turned to darker powers, still wielding some divine (or unholy) magic.",
         "health": 40,
-        "attack_min": 4, # Mix of mace and dark spells
+        "attack_min": 4,
         "attack_max": 7,
-        "loot_table": ["wooden_club", "mage_robe_novice", "brimstone_dust", "ectoplasm_vial", "tales_of_gaiatheia_vol1"],
+        "loot_table": [
+            {"item_id": "wooden_club", "chance": 0.4},
+            {"item_id": "mage_robe_novice", "chance": 0.2},
+            {"item_id": "brimstone_dust", "chance": 0.3},
+            {"item_id": "ectoplasm_vial", "chance": 0.2},
+            {"item_id": "tales_of_gaiatheia_vol1", "chance": 0.05}
+        ],
         "xp_value": 55
     },
     "gladiator_escaped": {
@@ -809,7 +1132,11 @@ ENEMY_TEMPLATES = {
         "health": 50,
         "attack_min": 6,
         "attack_max": 10,
-        "loot_table": ["short_sword_iron", "leather_scraps", "broken_shell"], # Improvised weapon/armor
+        "loot_table": [
+            {"item_id": "short_sword_iron", "chance": 0.5},
+            {"item_id": "leather_scraps", "chance": 0.6},
+            {"item_id": "broken_shell", "chance": 0.3}
+        ],
         "xp_value": 65
     },
     "hunter_tracker": {
@@ -817,9 +1144,15 @@ ENEMY_TEMPLATES = {
         "name": "Hunter Tracker",
         "description": "A skilled woodsman adept at tracking and using a bow, fiercely protective of their territory.",
         "health": 45,
-        "attack_min": 5, # Ranged primarily
+        "attack_min": 5,
         "attack_max": 8,
-        "loot_table": ["hunting_bow_simple", "steel_dagger", "animal_hide_small", "berries_wild", "local_area_map_crude"],
+        "loot_table": [
+            {"item_id": "hunting_bow_simple", "chance": 0.5},
+            {"item_id": "steel_dagger", "chance": 0.2},
+            {"item_id": "animal_hide_small", "chance": 0.4},
+            {"item_id": "berries_wild", "chance": 0.3},
+            {"item_id": "local_area_map_crude", "chance": 0.05}
+        ],
         "xp_value": 60
     },
     "enchanter_reclusive": {
@@ -827,19 +1160,29 @@ ENEMY_TEMPLATES = {
         "name": "Reclusive Enchanter",
         "description": "A magic-user specializing in enchantments, may use charmed beasts or illusions.",
         "health": 35,
-        "attack_min": 3, # Illusion/charm spells, weak direct damage
+        "attack_min": 3,
         "attack_max": 6,
-        "loot_table": ["staff_apprentice", "mage_robe_novice", "fey_dust", "scroll_light", "charm_of_minor_warding"],
+        "loot_table": [
+            {"item_id": "staff_apprentice", "chance": 0.3},
+            {"item_id": "mage_robe_novice", "chance": 0.2},
+            {"item_id": "fey_dust", "chance": 0.4},
+            {"item_id": "scroll_light", "chance": 0.2},
+            {"item_id": "charm_of_minor_warding", "chance": 0.1}
+        ],
         "xp_value": 50
     },
-    "druid_wildshape_wolf": { # Example of a druid in animal form
+    "druid_wildshape_wolf": {
         "id": "druid_wildshape_wolf",
         "name": "Druid (Wolf Form)",
         "description": "A druid transformed into a large, intelligent wolf.",
         "health": 40,
         "attack_min": 5,
         "attack_max": 8,
-        "loot_table": ["herbal_poultice", "sunpetal_leaf", "moonbloom_flower"], # Drops what they might carry as human
+        "loot_table": [
+            {"item_id": "herbal_poultice", "chance": 0.3},
+            {"item_id": "sunpetal_leaf", "chance": 0.4},
+            {"item_id": "moonbloom_flower", "chance": 0.2}
+        ],
         "xp_value": 58
     },
     "mystic_hermit": {
@@ -847,9 +1190,14 @@ ENEMY_TEMPLATES = {
         "name": "Mystic Hermit",
         "description": "An ascetic individual with strange powers, usually peaceful but dangerous if provoked.",
         "health": 30,
-        "attack_min": 2, # Unpredictable psychic/elemental attacks
+        "attack_min": 2,
         "attack_max": 10,
-        "loot_table": ["staff_apprentice", "journal_page_ripped", "crystal_shard_mundane", "berries_wild"],
+        "loot_table": [
+            {"item_id": "staff_apprentice", "chance": 0.2},
+            {"item_id": "journal_page_ripped", "chance": 0.1},
+            {"item_id": "crystal_shard_mundane", "chance": 0.3},
+            {"item_id": "berries_wild", "chance": 0.5}
+        ],
         "xp_value": 48
     },
     "pirate_swashbuckler": {
@@ -859,7 +1207,13 @@ ENEMY_TEMPLATES = {
         "health": 48,
         "attack_min": 5,
         "attack_max": 9,
-        "loot_table": ["short_sword_iron", "leather_cap", "pearl_small", "ration_pack_basic", "spices_exotic_pouch"],
+        "loot_table": [
+            {"item_id": "short_sword_iron", "chance": 0.4},
+            {"item_id": "leather_cap", "chance": 0.3},
+            {"item_id": "pearl_small", "chance": 0.1},
+            {"item_id": "ration_pack_basic", "chance": 0.2},
+            {"item_id": "spices_exotic_pouch", "chance": 0.05}
+        ],
         "xp_value": 62
     },
 
@@ -871,17 +1225,24 @@ ENEMY_TEMPLATES = {
         "health": 16,
         "attack_min": 2,
         "attack_max": 4,
-        "loot_table": ["rusty_dagger", "goblin_ear", "pickaxe_worn", "iron_ore"],
+        "loot_table": [
+            {"item_id": "rusty_dagger", "chance": 0.5},
+            {"item_id": "goblin_ear", "chance": 0.7},
+            {"item_id": "pickaxe_worn", "chance": 0.1},
+            {"item_id": "iron_ore", "chance": 0.2}
+        ],
         "xp_value": 14
     },
     "forest_spider_hatchling_swarm": {
         "id": "forest_spider_hatchling_swarm",
         "name": "Forest Spider Hatchling Swarm",
         "description": "A terrifying swarm of newly hatched, tiny spiders.",
-        "health": 10, # Swarm
-        "attack_min": 1, # Many tiny bites
+        "health": 10,
+        "attack_min": 1,
         "attack_max": 3,
-        "loot_table": ["spider_silk_strand"],
+        "loot_table": [
+            {"item_id": "spider_silk_strand", "chance": 0.9}
+        ],
         "xp_value": 6
     },
     "animated_broom": {
@@ -891,17 +1252,24 @@ ENEMY_TEMPLATES = {
         "health": 8,
         "attack_min": 1,
         "attack_max": 2,
-        "loot_table": ["timber_rough", "string_piece"],
+        "loot_table": [
+            {"item_id": "timber_rough", "chance": 0.5},
+            {"item_id": "string_piece", "chance": 0.7}
+        ],
         "xp_value": 4
     },
-    "kobold_skirmisher": { # Similar to small goblins
+    "kobold_skirmisher": {
         "id": "kobold_skirmisher",
         "name": "Kobold Skirmisher",
         "description": "A small, reptilian humanoid that uses traps and hit-and-run tactics.",
         "health": 12,
         "attack_min": 2,
         "attack_max": 4,
-        "loot_table": ["sling_leather", "pebble_shiny", "flint_sharp"],
+        "loot_table": [
+            {"item_id": "sling_leather", "chance": 0.4},
+            {"item_id": "pebble_shiny", "chance": 0.6},
+            {"item_id": "flint_sharp", "chance": 0.3}
+        ],
         "xp_value": 9
     },
     "giant_centipede": {
@@ -910,8 +1278,11 @@ ENEMY_TEMPLATES = {
         "description": "A horrifyingly large centipede with a venomous bite.",
         "health": 18,
         "attack_min": 2,
-        "attack_max": 5, # Poisonous
-        "loot_table": ["antidote_simple", "bone_fragment"],
+        "attack_max": 5,
+        "loot_table": [
+            {"item_id": "antidote_simple", "chance": 0.2},
+            {"item_id": "bone_fragment", "chance": 0.3}
+        ],
         "xp_value": 16
     },
     "possessed_peasant": {
@@ -920,8 +1291,12 @@ ENEMY_TEMPLATES = {
         "description": "A common villager whose body is controlled by a malevolent spirit.",
         "health": 20,
         "attack_min": 3,
-        "attack_max": 6, # Unnatural strength
-        "loot_table": ["wooden_club", "torn_rag", "ectoplasm_vial"],
+        "attack_max": 6,
+        "loot_table": [
+            {"item_id": "wooden_club", "chance": 0.5},
+            {"item_id": "torn_rag", "chance": 0.8},
+            {"item_id": "ectoplasm_vial", "chance": 0.15}
+        ],
         "xp_value": 18
     },
     "animated_scarecrow": {
@@ -931,7 +1306,11 @@ ENEMY_TEMPLATES = {
         "health": 25,
         "attack_min": 3,
         "attack_max": 5,
-        "loot_table": ["timber_rough", "torn_rag", "shadowroot_bark"],
+        "loot_table": [
+            {"item_id": "timber_rough", "chance": 0.6},
+            {"item_id": "torn_rag", "chance": 0.7},
+            {"item_id": "shadowroot_bark", "chance": 0.2}
+        ],
         "xp_value": 22
     },
     "mimic_small_chest": {
@@ -941,7 +1320,11 @@ ENEMY_TEMPLATES = {
         "health": 30,
         "attack_min": 5,
         "attack_max": 8,
-        "loot_table": ["gold_nugget_small", "gem_amethyst_rough", "healing_potion_lesser"], # The "bait" it uses
+        "loot_table": [
+            {"item_id": "gold_nugget_small", "chance": 0.3},
+            {"item_id": "gem_amethyst_rough", "chance": 0.2},
+            {"item_id": "healing_potion_lesser", "chance": 0.1}
+        ],
         "xp_value": 50
     },
     "gargoyle_weathered": {
@@ -951,7 +1334,11 @@ ENEMY_TEMPLATES = {
         "health": 45,
         "attack_min": 6,
         "attack_max": 9,
-        "loot_table": ["crystal_shard_mundane", "obsidian_shard", "iron_ore"],
+        "loot_table": [
+            {"item_id": "crystal_shard_mundane", "chance": 0.5},
+            {"item_id": "obsidian_shard", "chance": 0.3},
+            {"item_id": "iron_ore", "chance": 0.2}
+        ],
         "xp_value": 60
     },
     "slime_green_ooze": {
@@ -960,11 +1347,13 @@ ENEMY_TEMPLATES = {
         "description": "A pulsating blob of acidic green slime.",
         "health": 22,
         "attack_min": 2,
-        "attack_max": 4, # Acid damage, can damage equipment
-        "loot_table": ["clay_lump", "seaweed_clump"], # Amorphous loot
+        "attack_max": 4,
+        "loot_table": [
+            {"item_id": "clay_lump", "chance": 0.4},
+            {"item_id": "seaweed_clump", "chance": 0.3}
+        ],
         "xp_value": 15
     }
-    # --- END OF NEW ENEMIES (100 added) ---
 }
 
 # --- NPC Placeholders ---

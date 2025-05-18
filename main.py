@@ -1,12 +1,13 @@
 import random
 import os 
 import json 
+import curses # Import curses for the wrapper
 
 import config
 import items
 import ai_utils
 import game_data 
-import ui
+import ui # ui.py now contains display_curses_menu and get_numbered_choice
 import character
 import combat
 import saveload
@@ -150,119 +151,28 @@ def game():
             print("\nYou have succumbed to your wounds. Your journey ends.")
             game_over = True
 
-# --- Inventory Management Function ---
+# --- Inventory Management Function (Curses Version) ---
+def curses_inventory_screen(stdscr, player, items_module, config_module): # Add modules to params
+    # This function is now primarily a caller for the detailed UI function
+    ui.display_curses_inventory(stdscr, player, items_module, config_module)
+
 def manage_inventory(player):
-    while True: # Loop for inventory management screen
-        print("\n--- Inventory ---")
-        if not player['inventory']:
-            print("Your inventory is empty.")
-            return # Exit manage_inventory if empty
-
-        # Display items with numbers
-        item_display_list = []
-        for i, item_id in enumerate(player['inventory']):
-            item_name = items.ITEM_DB.get(item_id, {}).get("name", "Unknown Item")
-            equipped_marker = ""
-            if player.get('equipped_weapon') == item_id:
-                equipped_marker = " (Equipped Weapon)"
-            elif player.get('equipped_armor') == item_id:
-                equipped_marker = " (Equipped Armor)"
-            item_display_list.append(f"{item_name}{equipped_marker}")
-        
-        chosen_item_name_with_marker = ui.get_numbered_choice("Select an item to manage, or go back:", item_display_list + ["[Back to Actions]"])
-
-        if chosen_item_name_with_marker == "[Back to Actions]":
-            return
-
-        # Find the original item_id from the chosen_item_name_with_marker
-        # This is a bit tricky because of the marker. We need to find by index from item_display_list
-        selected_index = -1
-        for i, displayed_name in enumerate(item_display_list):
-            if displayed_name == chosen_item_name_with_marker:
-                selected_index = i
-                break
-        
-        if selected_index == -1: # Should not happen if logic is correct
-            print("Error selecting item.")
-            continue
-            
-        selected_item_id = player['inventory'][selected_index]
-        item_data = items.ITEM_DB.get(selected_item_id)
-
-        if not item_data:
-            print("Unknown item selected.") # Should not happen
-            continue
-
-        print(f"\n--- Managing: {item_data['name']} ---")
-        print(f"Description: {item_data.get('description', 'No description.')}")
-
-        item_actions = []
-        item_type = item_data.get('type')
-
-        if item_type == 'consumable':
-            item_actions.append("Use")
-        elif item_type == 'weapon':
-            if player.get('equipped_weapon') == selected_item_id:
-                item_actions.append("Unequip")
-            else:
-                item_actions.append("Equip")
-        elif item_type == 'armor':
-            if player.get('equipped_armor') == selected_item_id:
-                item_actions.append("Unequip")
-            else:
-                item_actions.append("Equip")
-        
-        item_actions.append("Examine") # Always allow examine
-        # item_actions.append("Drop") # Add later
-        item_actions.append("[Back to Inventory List]")
-
-        chosen_action = ui.get_numbered_choice(f"Actions for {item_data['name']}:", item_actions)
-
-        if chosen_action == "[Back to Inventory List]":
-            continue # Go back to the inventory item listing
-        elif chosen_action == "Examine":
-            # Already printed description, could add more details if available
-            print(f"It's a {item_data['name']}. Value: {item_data.get('value', 0)}.") # Example extra detail
-        elif chosen_action == "Use":
-            if item_type == 'consumable':
-                effect = item_data.get("effect")
-                if effect and "heal" in effect:
-                    heal_amount = effect["heal"]
-                    player['health'] = min(player['max_health'], player['health'] + heal_amount)
-                    print(f"You used the {item_data['name']} and recovered {heal_amount} health.")
-                    print(f"Your health is now {player['health']}/{player['max_health']}.")
-                    player['inventory'].remove(selected_item_id) # Remove after use
-                    # Since item is removed, break from item action loop and go to main inventory list
-                    break 
-                else:
-                    print(f"The {item_data['name']} doesn't seem to have a usable effect right now.")
-            else:
-                print("This item cannot be 'used' in that way.")
-        elif chosen_action == "Equip":
-            if item_type == 'weapon':
-                if player['equipped_weapon'] and player['equipped_weapon'] != selected_item_id:
-                    print(f"You unequip the {items.ITEM_DB[player['equipped_weapon']]['name']}.")
-                player['equipped_weapon'] = selected_item_id
-                print(f"You equipped the {item_data['name']}.")
-            elif item_type == 'armor':
-                if player['equipped_armor'] and player['equipped_armor'] != selected_item_id:
-                     print(f"You unequip the {items.ITEM_DB[player['equipped_armor']]['name']}.")
-                player['equipped_armor'] = selected_item_id
-                print(f"You equipped the {item_data['name']}.")
-            else:
-                print("This item cannot be equipped.")
-        elif chosen_action == "Unequip":
-            if item_type == 'weapon' and player.get('equipped_weapon') == selected_item_id:
-                print(f"You unequip the {item_data['name']}.")
-                player['equipped_weapon'] = None
-            elif item_type == 'armor' and player.get('equipped_armor') == selected_item_id:
-                print(f"You unequip the {item_data['name']}.")
-                player['equipped_armor'] = None
-            else:
-                print("This item is not equipped or cannot be unequipped directly.")
-        
-        # After an action, re-evaluate inventory (especially if an item was used)
-        # The loop will either continue to item selection or exit if item used & removed.
+    try:
+        # Pass the required modules to the curses_inventory_screen
+        curses.wrapper(curses_inventory_screen, player, items, config)
+    except curses.error as e:
+        print("Curses error occurred. Terminal might be in an odd state.")
+        print(f"Error: {e}")
+        print("If the display is messed up, try resizing your terminal or restarting it.")
+    except Exception as e:
+        # Catch any other unexpected error during inventory management
+        print(f"An unexpected error occurred in inventory: {e}")
+        # Potentially log e for debugging
+    finally:
+        # curses.wrapper should handle terminal cleanup (curses.endwin()).
+        # If not using wrapper, you'd call curses.endwin() here.
+        # This space can be used for any additional cleanup if needed after inventory closes.
+        pass 
 
 if __name__ == "__main__":
     game() 

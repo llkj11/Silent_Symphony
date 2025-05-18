@@ -93,15 +93,15 @@ ITEM_DB = {
         "id": "scroll_fire_dart",
         "name": "Scroll of Fire Dart",
         "description": "A magical scroll that unleashes a small bolt of fire upon reading.",
-        "type": "consumable",
-        "effect": {"cast_spell": "fire_dart", "damage": 8}, # Spell logic handled elsewhere
+        "type": "scroll",
+        "effect": {"cast_spell": "fire_dart", "damage": 8},
         "value": 50
     },
     "scroll_light": {
         "id": "scroll_light",
         "name": "Scroll of Light",
         "description": "Illuminates the surroundings when read.",
-        "type": "consumable",
+        "type": "scroll",
         "effect": {"cast_spell": "light"},
         "value": 30
     },
@@ -238,7 +238,7 @@ ITEM_DB = {
         "id": "wooden_shield_round",
         "name": "Round Wooden Shield",
         "description": "A basic shield made of wood, reinforced with leather.",
-        "type": "armor",
+        "type": "shield",
         "slot": "off_hand",
         "defense_bonus": 1, # Shields might add to block chance or direct defense
         "value": 25

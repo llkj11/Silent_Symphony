@@ -45,19 +45,31 @@ def combat(player_character, enemy_instance):
             
             if enemy_health > 0:
                 enemy_raw_attack = random.randint(enemy_attack_min, enemy_attack_max)
-                player_defense = 0
+                
+                player_armor_defense = 0
                 equipped_armor_id = player_character.get('equipped_armor')
                 armor_name_display = ""
-
                 if equipped_armor_id and equipped_armor_id in items.ITEM_DB:
                     armor_data = items.ITEM_DB[equipped_armor_id]
                     if armor_data.get('type') == 'armor':
-                        player_defense = armor_data.get('defense_bonus', 0)
+                        player_armor_defense = armor_data.get('defense_bonus', 0)
                         armor_name_display = f" (defended by {armor_data['name']})"
                 
-                actual_damage_taken = max(0, enemy_raw_attack - player_defense) # Ensure damage isn't negative
+                player_shield_defense = 0
+                equipped_shield_id = player_character.get('equipped_shield')
+                shield_name_display = ""
+                if equipped_shield_id and equipped_shield_id in items.ITEM_DB:
+                    shield_data = items.ITEM_DB[equipped_shield_id]
+                    if shield_data.get('type') == 'shield':
+                        player_shield_defense = shield_data.get('defense_bonus', 0)
+                        shield_name_display = f" and {shield_data['name']}" if armor_name_display else f" (defended by {shield_data['name']})"
+
+                total_player_defense = player_armor_defense + player_shield_defense
+                defense_display = f"{armor_name_display}{shield_name_display}"
+
+                actual_damage_taken = max(0, enemy_raw_attack - total_player_defense)
                 player_health -= actual_damage_taken
-                print(f"The {enemy_name} attacks you for {enemy_raw_attack} damage!{armor_name_display} You take {actual_damage_taken} damage. Your health is now {player_health}.")
+                print(f"The {enemy_name} attacks you for {enemy_raw_attack} damage!{defense_display} You take {actual_damage_taken} damage. Your health is now {player_health}.")
         elif action == 'Flee':
             print("You managed to flee!")
             player_character['health'] = player_health
