@@ -1,3 +1,8 @@
+import os             # For accessing environment variables
+from dotenv import load_dotenv # For loading .env file
+
+load_dotenv() # Load variables from .env file into environment
+
 try:
     import google.genai as genai
     from google.genai import types
@@ -9,9 +14,10 @@ except ImportError:
 
 # --- Configuration ---
 DEBUG_MODE = False # Set to True to enable debug prints for AI calls
-# IMPORTANT: Replace 'YOUR_API_KEY' with your actual Google AI Studio API key.
-# You can also set the GOOGLE_API_KEY environment variable.
-API_KEY = 'AIzaSyDE6KqtzgaRjp_PppUDYbctJxpKbqmvrsw'
+
+# API_KEY is now loaded from .env
+API_KEY = os.getenv("GOOGLE_API_KEY") 
+
 AI_MODEL_NAME = "gemini-2.5-flash-preview-04-17" # Updated to specific 2.5 Flash preview model
 
 # Initialize Google AI Client
@@ -50,5 +56,5 @@ if genai and types and API_KEY and API_KEY != 'YOUR_API_KEY':
         global_generation_config = None
 elif not (genai and types):
     print("Skipping AI initialization in config.py as the SDK (google.genai or types) is not available.")
-elif API_KEY == 'YOUR_API_KEY':
-    print("Skipping AI initialization in config.py. API_KEY is still the placeholder 'YOUR_API_KEY'.") 
+elif not API_KEY or API_KEY == 'YOUR_API_KEY': # Updated check
+    print("Skipping AI initialization in config.py. GOOGLE_API_KEY not found in .env or is still a placeholder.") 
