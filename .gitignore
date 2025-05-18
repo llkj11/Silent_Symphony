@@ -1,1 +1,4 @@
 /gamerpg
+.env
+__pycache__/
+*.pyc
