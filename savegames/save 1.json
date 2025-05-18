@@ -1,0 +1,23 @@
+{
+    "name": "Rynn",
+    "race": "Maithar",
+    "origin": "Lowborn",
+    "star_sign": "Aegis",
+    "health": 30,
+    "max_health": 30,
+    "inventory": [
+        "healing_salve_minor",
+        "seaweed_clump",
+        "rusty_dagger",
+        "pebble_shiny",
+        "broken_shell",
+        "small_tarnished_bronze_key"
+    ],
+    "location": "beach_starting",
+    "last_described_location": "beach_starting",
+    "equipped_weapon": "rusty_dagger",
+    "equipped_armor": null,
+    "level": 1,
+    "xp": 0,
+    "xp_to_next_level": 50
+}
