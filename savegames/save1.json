@@ -1,0 +1,13 @@
+{
+    "name": "Rynn",
+    "race": "Orc",
+    "origin": "Rural",
+    "star_sign": "Lumos",
+    "health": 9,
+    "max_health": 30,
+    "inventory": [
+        "Shiny Pebble"
+    ],
+    "location": "Beach",
+    "last_described_location": "Beach"
+}
