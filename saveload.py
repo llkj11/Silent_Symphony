@@ -56,6 +56,33 @@ def load_game_state(filename):
     try:
         with open(filepath, 'r') as f:
             player_data = json.load(f)
+        
+        # --- Backward Compatibility for Skills ---
+        # This assumes player_data is the player_character dictionary itself,
+        # or that player_character is a primary key within player_data.
+        # Based on current usage, player_data IS the player_character dict.
+        if player_data: # Ensure player_data is not None
+            if 'available_skills' not in player_data:
+                player_data['available_skills'] = ['power_attack', 'shield_bash'] # Default skills
+                if "DEBUG_MODE_SAVELOAD" in os.environ: # Optional debug print
+                    print("DEBUG: Added 'available_skills' to loaded save.")
+
+            if 'skill_cooldowns' not in player_data:
+                player_data['skill_cooldowns'] = {}
+                if "DEBUG_MODE_SAVELOAD" in os.environ:
+                    print("DEBUG: Added 'skill_cooldowns' to loaded save.")
+
+            # Ensure all available skills have a cooldown entry, defaulting to 0 (ready)
+            # This handles cases where 'available_skills' might exist from an even older partial save,
+            # but 'skill_cooldowns' is new or incomplete.
+            if 'available_skills' in player_data and isinstance(player_data['available_skills'], list):
+                for skill_id in player_data['available_skills']:
+                    if skill_id not in player_data.get('skill_cooldowns', {}): # Use .get for safety
+                        if "DEBUG_MODE_SAVELOAD" in os.environ:
+                             print(f"DEBUG: Initializing cooldown for '{skill_id}' in loaded save.")
+                        player_data.setdefault('skill_cooldowns', {})[skill_id] = 0
+        # --- End Backward Compatibility ---
+
         print(f"Game loaded from '{actual_filename}'.") # Use actual_filename for user message
         return player_data
     except IOError as e:
