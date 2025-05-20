@@ -56,6 +56,12 @@ def load_game_state(filename):
     try:
         with open(filepath, 'r') as f:
             player_data = json.load(f)
+        # Ensure 'completed_pois' exists for compatibility with older saves
+        player_data.setdefault('completed_pois', {})
+        # Ensure 'completed_pois' values are sets for older saves that might have them as lists
+        for location_id, poi_ids in player_data['completed_pois'].items():
+            if isinstance(poi_ids, list): # Compatibility for potential old format
+                player_data['completed_pois'][location_id] = set(poi_ids)
         print(f"Game loaded from '{actual_filename}'.") # Use actual_filename for user message
         return player_data
     except IOError as e:

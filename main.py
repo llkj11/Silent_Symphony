@@ -88,47 +88,78 @@ def parse_outcome(ai_text):
 
 # --- Helper function to get a random enemy from location's encounter groups ---
 def get_random_enemy_for_location(location_id, specific_group=None):
+    if config.DEBUG_MODE: print(f"DEBUG get_random_enemy_for_location: Called with location_id='{location_id}', specific_group='{specific_group}'")
     current_location_data = locations.LOCATIONS.get(location_id)
+    if config.DEBUG_MODE: print(f"DEBUG get_random_enemy_for_location: current_location_data: {current_location_data is not None}")
+
     if not current_location_data:
+        if config.DEBUG_MODE: print("DEBUG get_random_enemy_for_location: Returning None - current_location_data is None.")
         return None
 
     encounter_group_names_for_location = current_location_data.get('encounter_groups', [])
+    if config.DEBUG_MODE: print(f"DEBUG get_random_enemy_for_location: encounter_group_names_for_location: {encounter_group_names_for_location}")
+
     if not encounter_group_names_for_location:
+        if config.DEBUG_MODE: print("DEBUG get_random_enemy_for_location: Returning None - encounter_group_names_for_location is empty.")
         return None # No encounter groups defined for this location
 
     chosen_group_name = None
     if specific_group and specific_group in encounter_group_names_for_location:
-        # If a specific, valid group is requested for this location, use it
         chosen_group_name = specific_group
-    elif specific_group: # A specific group was asked for, but it's not valid for this location
-        if config.DEBUG_MODE: print(f"DEBUG: Requested specific_group '{specific_group}' not valid for location '{location_id}'. Falling back.")
-        # Fallback to random choice if specific group isn't valid for the location
+    elif specific_group: 
+        if config.DEBUG_MODE: print(f"DEBUG get_random_enemy_for_location: specific_group '{specific_group}' not valid for location '{location_id}'. Falling back to random.")
         chosen_group_name = random.choice(encounter_group_names_for_location) if encounter_group_names_for_location else None
     else:
-        # Pick one of the location's encounter groups randomly if no specific group requested
         chosen_group_name = random.choice(encounter_group_names_for_location) if encounter_group_names_for_location else None
     
+    if config.DEBUG_MODE: print(f"DEBUG get_random_enemy_for_location: chosen_group_name: {chosen_group_name}")
+
     if not chosen_group_name:
-        return None # Could not determine an encounter group
+        if config.DEBUG_MODE: print("DEBUG get_random_enemy_for_location: Returning None - chosen_group_name is None.")
+        return None 
 
     encounter_list = locations.ENCOUNTER_GROUPS.get(chosen_group_name, [])
+    if config.DEBUG_MODE: print(f"DEBUG get_random_enemy_for_location: encounter_list for group '{chosen_group_name}': {encounter_list}")
     
     if not encounter_list:
-        return None # Chosen group is empty or not found
+        if config.DEBUG_MODE: print(f"DEBUG get_random_enemy_for_location: Returning None - encounter_list is empty for group '{chosen_group_name}'.")
+        return None 
 
     # Weighted random choice from the encounter list
-    total_weight = sum(entry.get("weight", 0) for entry in encounter_list)
-    if total_weight == 0: # Avoid division by zero if all weights are 0
-        # Fallback to uniform random choice if weights are problematic
-        return random.choice(encounter_list).get("enemy_id") if encounter_list else None
+    total_weight = sum(entry.get("weight", 0) for entry in encounter_list if isinstance(entry, dict)) # Ensure entry is a dict
+    if config.DEBUG_MODE: print(f"DEBUG get_random_enemy_for_location: total_weight: {total_weight}")
+
+    if total_weight == 0: 
+        # Fallback to uniform random choice if weights are problematic or all 0
+        if config.DEBUG_MODE: print("DEBUG get_random_enemy_for_location: total_weight is 0. Attempting uniform random choice.")
+        if encounter_list: # Check if list is not empty before choosing
+            # Ensure entries in encounter_list are dicts and have 'enemy_id'
+            valid_entries = [e for e in encounter_list if isinstance(e, dict) and "enemy_id" in e]
+            if valid_entries:
+                selected_entry = random.choice(valid_entries)
+                if config.DEBUG_MODE: print(f"DEBUG get_random_enemy_for_location: Uniform choice selected: {selected_entry.get('enemy_id')}")
+                return selected_entry.get("enemy_id")
+            else:
+                if config.DEBUG_MODE: print("DEBUG get_random_enemy_for_location: Returning None - total_weight is 0 and no valid entries with 'enemy_id' in encounter_list.")
+                return None
+        else: # This case should ideally be caught by 'if not encounter_list:' above
+            if config.DEBUG_MODE: print("DEBUG get_random_enemy_for_location: Returning None - total_weight is 0 and encounter_list is also empty.")
+            return None
 
     random_pick = random.uniform(0, total_weight)
     current_sum = 0
     for entry in encounter_list:
+        if not isinstance(entry, dict): # Skip malformed entries
+            if config.DEBUG_MODE: print(f"DEBUG get_random_enemy_for_location: Skipping malformed entry in encounter_list: {entry}")
+            continue
         current_sum += entry.get("weight", 0)
         if random_pick <= current_sum:
-            return entry.get("enemy_id")
-    return None # Should not be reached if weights are positive
+            enemy_id = entry.get("enemy_id")
+            if config.DEBUG_MODE: print(f"DEBUG get_random_enemy_for_location: Weighted choice selected: {enemy_id}")
+            return enemy_id
+            
+    if config.DEBUG_MODE: print("DEBUG get_random_enemy_for_location: Returning None - loop completed without selection (should be rare if weights > 0).")
+    return None
 
 # --- New Helper: Process POI Loot Table ---
 def process_poi_loot(loot_table_ids):
@@ -283,11 +314,24 @@ def game():
                 
                 # --- Stage 1: Select POIs from Location Definition ---
                 defined_pois_for_location = current_location_data.get('defined_pois', [])
+                
+                # --- Filter out completed POIs ---
+                completed_poi_ids_for_current_location = player['completed_pois'].get(current_location_id, set())
+                
+                available_pois_for_selection = [
+                    poi for poi in defined_pois_for_location 
+                    if poi.get('poi_id') not in completed_poi_ids_for_current_location
+                ]
+                if config.DEBUG_MODE:
+                    if len(defined_pois_for_location) != len(available_pois_for_selection):
+                        print(f"DEBUG: Filtered POIs. Original: {len(defined_pois_for_location)}, Available for selection: {len(available_pois_for_selection)}")
+                        print(f"DEBUG: Completed POIs for {current_location_id}: {completed_poi_ids_for_current_location}")
+
                 available_pois_to_present = []
-                if defined_pois_for_location:
+                if available_pois_for_selection:
                     # Select a subset of POIs to present to the player (e.g., 2 to 4)
-                    num_pois_to_offer = min(len(defined_pois_for_location), random.randint(2, 4))
-                    available_pois_to_present = random.sample(defined_pois_for_location, num_pois_to_offer)
+                    num_pois_to_offer = min(len(available_pois_for_selection), random.randint(2, 4))
+                    available_pois_to_present = random.sample(available_pois_for_selection, num_pois_to_offer)
                 
                 if not available_pois_to_present:
                     print("You scan the area intently, but nothing specific catches your eye for closer investigation right now.")
@@ -306,6 +350,17 @@ def game():
                 poi_display_texts = [poi.get('display_text_for_player_choice', "An unknown point of interest.") for poi in available_pois_to_present]
                 options_for_choice = poi_display_texts + ["Ignore these and look around generally"]
                 chosen_poi_display_text = ui.get_numbered_choice("What do you want to investigate further?", options_for_choice)
+
+                # --- Check if chosen POI was already completed (safeguard) ---
+                if chosen_poi_display_text != "Ignore these and look around generally":
+                    # Find the chosen_poi_def again, as it's needed to get the poi_id
+                    temp_chosen_poi_def = next((poi for poi in available_pois_to_present if poi.get('display_text_for_player_choice') == chosen_poi_display_text), None)
+                    if temp_chosen_poi_def:
+                        poi_id_to_check = temp_chosen_poi_def.get('poi_id')
+                        if poi_id_to_check and poi_id_to_check in player['completed_pois'].get(current_location_id, set()):
+                            print(f"\nYou have already investigated '{chosen_poi_display_text}'. There's nothing new to find there.")
+                            if config.DEBUG_MODE: print(f"DEBUG: Player selected an already completed POI '{poi_id_to_check}'. Bypassing interaction.")
+                            continue # Skip to the next iteration of the main game loop
 
                 # --- Stage 3: Resolve Investigation ---
                 outcome_prompt = ""
@@ -415,6 +470,8 @@ def game():
                 if config.DEBUG_MODE: print(f"DEBUG (Stage 3 AI Prompt): {outcome_prompt}")
                 ai_response_stage3 = ai_utils.get_ai_model_response(outcome_prompt)
                 function_called_successfully = False
+                combat_occurred_this_action = False # Flag for this "Explore this area" action
+
                 try:
                     # ... (Provider-aware response parsing as before) ...
                     # --- GEMINI PATH ---
@@ -444,7 +501,10 @@ def game():
                                         print(f"\n{narrative}")
                                         if determined_enemy_id_to_spawn: # Use game-determined enemy
                                             enemy_instance = entities.get_enemy_instance(determined_enemy_id_to_spawn)
-                                            if enemy_instance: combat_result = combat.combat(player, enemy_instance); game_over = True if combat_result == "lost" else game_over
+                                            if enemy_instance: 
+                                                combat_result = combat.combat(player, enemy_instance)
+                                                game_over = True if combat_result == "lost" else game_over
+                                                combat_occurred_this_action = True
                                             else: print("A menacing presence fades.")
                                         else: # AI called encounter but game logic had no enemy (should be rare)
                                             if config.DEBUG_MODE: print(f"DEBUG: AI called encounter_enemy but game logic had no enemy.")
@@ -455,6 +515,37 @@ def game():
                                         narrative = function_call.args.get('narrative_text', "You observe your surroundings quietly."); print(f"\n{narrative}");
                                         function_called_successfully = True; break
                                     else: print("\nA strange feeling washes over you..."); function_called_successfully = True; break
+                            
+                            # --- Mark POI as completed after successful interaction ---
+                            if function_called_successfully and chosen_poi_def and chosen_poi_def != "Ignore these and look around generally":
+                                poi_id_to_complete = chosen_poi_def.get('poi_id')
+                                poi_type = chosen_poi_def.get('type')
+                                if poi_id_to_complete:
+                                    # Conditions for marking as completed:
+                                    # - loot_container: if opened (looted/empty) or trap sprung. Not if locked and failed.
+                                    # - loot_scatter: if success or fail (opportunity gone).
+                                    # - clue_object, simple_description, navigation_hint: after first interaction.
+                                    mark_completed = False
+                                    if poi_type == "loot_container":
+                                        # Assuming 'is_locked' and 'can_unlock' were determined earlier
+                                        # We need to infer if it was successfully opened or trap sprung
+                                        # This part might need refinement based on actual game flow variables
+                                        # For now, assume if function_called_successfully, it means it was resolved.
+                                        # A more robust way would be to check specific outcomes.
+                                        # Let's assume if it's not "It's locked." narrative, it's resolved.
+                                        # This is a placeholder for more precise logic later if needed.
+                                        is_locked_and_failed = chosen_poi_def.get('locked', False) and not True # Replace True with actual can_unlock status if available
+                                        if not is_locked_and_failed:
+                                            mark_completed = True
+                                    elif poi_type == "loot_scatter":
+                                        mark_completed = True # Always completed after attempt
+                                    elif poi_type in ["clue_object", "simple_description", "navigation_hint"]:
+                                        mark_completed = True
+                                    
+                                    if mark_completed:
+                                        player['completed_pois'].setdefault(current_location_id, set()).add(poi_id_to_complete)
+                                        if config.DEBUG_MODE: print(f"DEBUG: Marked POI '{poi_id_to_complete}' in '{current_location_id}' as completed.")
+                                
                     # --- OPENAI PATH ---
                     elif config.AI_PROVIDER == "OPENAI":
                         if hasattr(ai_response_stage3, 'choices') and ai_response_stage3.choices and hasattr(ai_response_stage3.choices[0],'message') and ai_response_stage3.choices[0].message.tool_calls:
@@ -479,7 +570,10 @@ def game():
                                     print(f"\n{narrative}")
                                     if determined_enemy_id_to_spawn:
                                         enemy_instance = entities.get_enemy_instance(determined_enemy_id_to_spawn)
-                                        if enemy_instance: combat_result = combat.combat(player, enemy_instance); game_over = True if combat_result == "lost" else game_over
+                                        if enemy_instance: 
+                                            combat_result = combat.combat(player, enemy_instance)
+                                            game_over = True if combat_result == "lost" else game_over
+                                            combat_occurred_this_action = True
                                         else: print("A menacing presence fades.")
                                     else: print("You sense danger, but it quickly passes.")
                                     function_called_successfully = True; break
@@ -488,17 +582,75 @@ def game():
                                     narrative = args.get('narrative_text', "You observe your surroundings quietly."); print(f"\n{narrative}");
                                     function_called_successfully = True; break
                                 else: print("\nA strange feeling washes over you..."); function_called_successfully = True; break
-                    
+
+                            # --- Mark POI as completed after successful interaction (OpenAI path) ---
+                            if function_called_successfully and chosen_poi_def and chosen_poi_def != "Ignore these and look around generally":
+                                poi_id_to_complete = chosen_poi_def.get('poi_id')
+                                poi_type = chosen_poi_def.get('type')
+                                if poi_id_to_complete:
+                                    mark_completed = False
+                                    if poi_type == "loot_container":
+                                        is_locked_and_failed = chosen_poi_def.get('locked', False) and not True # Placeholder for can_unlock
+                                        if not is_locked_and_failed:
+                                            mark_completed = True
+                                    elif poi_type == "loot_scatter":
+                                        mark_completed = True
+                                    elif poi_type in ["clue_object", "simple_description", "navigation_hint"]:
+                                        mark_completed = True
+                                    
+                                    if mark_completed:
+                                        player['completed_pois'].setdefault(current_location_id, set()).add(poi_id_to_complete)
+                                        if config.DEBUG_MODE: print(f"DEBUG: Marked POI '{poi_id_to_complete}' in '{current_location_id}' as completed (OpenAI path).")
+
                     if not function_called_successfully: 
                         # ... (fallback if AI didn't make a valid function call at all in Stage 3)
                         desc_text = "You investigate, but nothing definitive happens."
                         # (Simplified fallback text extraction)
-                        print(f"\n{desc_text}")
+                        # Try to get text from AI response if it exists and is simple text
+                        fallback_narrative = "You investigate, but nothing definitive happens."
+                        if config.AI_PROVIDER == "GEMINI":
+                            if hasattr(ai_response_stage3, 'candidates') and ai_response_stage3.candidates and \
+                            hasattr(ai_response_stage3.candidates[0], 'content') and hasattr(ai_response_stage3.candidates[0].content, 'parts') and \
+                            ai_response_stage3.candidates[0].content.parts and not hasattr(ai_response_stage3.candidates[0].content.parts[0], 'function_call'):
+                                fallback_narrative = get_text_from_part(ai_response_stage3.candidates[0].content.parts[0]) or fallback_narrative
+                        elif config.AI_PROVIDER == "OPENAI":
+                            if hasattr(ai_response_stage3, 'choices') and ai_response_stage3.choices and \
+                            hasattr(ai_response_stage3.choices[0], 'message') and ai_response_stage3.choices[0].message.content:
+                                fallback_narrative = ai_response_stage3.choices[0].message.content or fallback_narrative
+                        print(f"\n{fallback_narrative}")
+                        if config.DEBUG_MODE: print(f"DEBUG: Stage 3 AI did not call a function or provide recognized output. Printed fallback or direct text.")
+
                 except Exception as e_stage3:
                     # ... (exception handling)
                     print(f"Error processing exploration outcome: {e_stage3}")
                     if config.DEBUG_MODE: import traceback; traceback.print_exc()
                     print("\nThe world seems to momentarily warp around your focus, then settles.")
+
+                # --- General Random Encounter Chance (Post-Action) ---
+                if not game_over and not combat_occurred_this_action: # Only if player is alive and no combat happened yet this action
+                    if random.random() < config.GENERAL_RANDOM_ENCOUNTER_CHANCE: # e.g. 0.20 for 20%
+                        if config.DEBUG_MODE: print(f"DEBUG: General random encounter triggered (chance: {config.GENERAL_RANDOM_ENCOUNTER_CHANCE}).")
+                        random_enemy_id = get_random_enemy_for_location(current_location_id)
+                        if random_enemy_id:
+                            enemy_instance = entities.get_enemy_instance(random_enemy_id)
+                            if enemy_instance:
+                                # Simple lead-in narratives
+                                lead_in_narratives = [
+                                    "Suddenly, you are ambushed!",
+                                    "You hear a rustling nearby, and a wild creature appears!",
+                                    "A shadow darts from the corner of your eye - an enemy attacks!",
+                                    "The air grows cold... you are not alone!"
+                                ]
+                                print(f"\n{random.choice(lead_in_narratives)}")
+                                combat_result = combat.combat(player, enemy_instance)
+                                if combat_result == "lost":
+                                    game_over = True
+                                # combat_occurred_this_action = True # Not strictly needed here as it's the end of the action
+                            else:
+                                if config.DEBUG_MODE: print(f"DEBUG: General random encounter failed to spawn enemy instance for ID: {random_enemy_id}")
+                        else:
+                            if config.DEBUG_MODE: print(f"DEBUG: General random encounter triggered, but get_random_enemy_for_location returned None for location {current_location_id}.")
+            
             elif selected_action == 'Move to another area':
                 print("\nWhere would you like to go?")
                 available_exits = current_location_data.get('exits', {})

@@ -54,6 +54,7 @@ if genai and gemini_types: # Check if SDK and types loaded
 
 # --- Configuration ---
 DEBUG_MODE = True # Set to True to enable debug prints for AI calls
+GENERAL_RANDOM_ENCOUNTER_CHANCE = 0.20 # 20% chance for a random encounter after exploring
 
 # API_KEY is now loaded from .env
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY") 
