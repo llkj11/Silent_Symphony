@@ -2,6 +2,26 @@ import random
 import game_data
 import ui
 
+SKILLS_DATA = {
+    'power_attack': {
+        'name': 'Power Attack',
+        'cooldown': 2,
+        'damage_multiplier': 1.5,
+        'description': 'A strong attack that deals 1.5x damage. Cooldown: 2 turns.'
+    },
+    'shield_bash': {
+        'name': 'Shield Bash',
+        'cooldown': 3,
+        'damage_multiplier': 0.5,
+        'effect': {'type': 'stun', 'chance': 0.3, 'duration': 1},
+        'description': 'Bash with your shield, dealing 0.5x damage with a 30% chance to stun for 1 turn. Cooldown: 3 turns. Requires a shield.'
+    }
+}
+
+def get_skill_details(skill_id):
+    """Returns the details of a skill from SKILLS_DATA."""
+    return SKILLS_DATA.get(skill_id)
+
 # --- Leveling Configuration ---
 BASE_XP_TO_NEXT_LEVEL = 50
 XP_LEVEL_MULTIPLIER = 1.5 # How much more XP is needed for each subsequent level (e.g., 100, 150, 225)
@@ -90,5 +110,27 @@ As you take your first steps into the unknown, you can't shake the feeling that 
     player_character['level'] = 1
     player_character['xp'] = 0
     player_character['xp_to_next_level'] = int(BASE_XP_TO_NEXT_LEVEL * (XP_LEVEL_MULTIPLIER ** 0)) # Initial XP for level 1 to 2
+    player_character['available_skills'] = ['power_attack', 'shield_bash']
+    player_character['skill_cooldowns'] = {}
+    # Initialize skill cooldowns to 0
+    for skill in player_character["available_skills"]:
+        if skill in SKILLS_DATA:
+             player_character["skill_cooldowns"][skill] = 0
 
     return player_character 
+
+def is_skill_on_cooldown(player_character, skill_id):
+    """Checks if a skill is currently on cooldown."""
+    return player_character['skill_cooldowns'].get(skill_id, 0) > 0
+
+def set_skill_on_cooldown(player_character, skill_id):
+    """Sets the cooldown for a skill."""
+    skill_details = get_skill_details(skill_id)
+    if skill_details:
+        player_character['skill_cooldowns'][skill_id] = skill_details['cooldown']
+
+def decrement_skill_cooldowns(player_character):
+    """Decrements all active skill cooldowns by 1."""
+    for skill_id in player_character['skill_cooldowns']:
+        if player_character['skill_cooldowns'][skill_id] > 0:
+            player_character['skill_cooldowns'][skill_id] -= 1

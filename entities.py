@@ -37,7 +37,18 @@ ENEMY_TEMPLATES = {
         "unique_loot": [
             {"item_id": "spear_common", "chance": 0.25} # higher chance for spear for scout
         ],
-        "xp_value": 10
+        "xp_value": 10,
+        "special_abilities": [
+            {
+                'id': 'desperate_lunge',
+                'name': 'Desperate Lunge',
+                'damage_multiplier': 1.2,
+                'cooldown': 3,
+                'current_cooldown': 0,
+                'chance': 0.4,
+                'description': 'The goblin makes a desperate, somewhat stronger attack.'
+            }
+        ]
     },
     "giant_sand_crab": {
         "id": "giant_sand_crab",
@@ -70,7 +81,19 @@ ENEMY_TEMPLATES = {
         "unique_loot": [
             {"item_id": "wooden_club", "chance": 0.6}
         ],
-        "xp_value": 15
+        "xp_value": 15,
+        "special_abilities": [
+            {
+                'id': 'pummel',
+                'name': 'Pummel',
+                'damage_multiplier': 0.8,
+                'effect': {'type': 'stun', 'duration': 1, 'chance': 0.2},
+                'cooldown': 4,
+                'current_cooldown': 0,
+                'chance': 0.3,
+                'description': 'The thug attempts to pummel you, possibly stunning you briefly.'
+            }
+        ]
     },
     "bandit_archer": {
         "id": "bandit_archer",
@@ -1397,13 +1420,23 @@ NPC_TEMPLATES = {
 
 # --- Utility function to get a copy of an enemy for combat ---
 import random
+import copy
 
 def get_enemy_instance(enemy_id):
     if enemy_id in ENEMY_TEMPLATES:
-        # Return a copy so modifications in combat don't affect the template
         template = ENEMY_TEMPLATES[enemy_id]
+        # Start with a shallow copy for most attributes
         instance = template.copy()
-        # Ensure mutable fields like loot_table are also copied if necessary,
-        # though for loot generation logic modifies this instance's loot_table.
+
+        # Deep copy 'special_abilities' if it exists, to ensure independent cooldowns
+        if 'special_abilities' in template:
+            instance['special_abilities'] = copy.deepcopy(template['special_abilities'])
+            # Ensure current_cooldown is reset (though deepcopy should handle this if template is correct)
+            for ability in instance['special_abilities']:
+                ability['current_cooldown'] = 0 # Explicitly reset
+        
+        # Note: loot_groups and unique_loot are typically fine with shallow copy as they are
+        # used as references to generate actual loot, not modified in the instance itself.
+        # If other mutable complex structures are added later, they might need deepcopy too.
         return instance
     return None

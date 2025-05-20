@@ -18,6 +18,26 @@ def get_numbered_choice(prompt_text, options_list):
             print("Invalid input. Please enter a number.")
     return options_list[choice_num - 1]
 
+# Helper function for presenting choices (options are already formatted strings)
+def get_generic_choice(prompt_text, options_list, show_numbers=True):
+    print(prompt_text)
+    for i, option_text in enumerate(options_list):
+        if show_numbers:
+            print(f"  {i+1}. {option_text}")
+        else:
+            print(f"  - {option_text}") # Simple bullet for non-numbered
+    
+    choice_num = -1
+    while choice_num < 1 or choice_num > len(options_list):
+        try:
+            raw_input = input(f"Enter your choice (1-{len(options_list)}): ")
+            choice_num = int(raw_input)
+            if not (1 <= choice_num <= len(options_list)):
+                print(f"Invalid number. Please enter a number between 1 and {len(options_list)}.")
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+    return options_list[choice_num - 1]
+
 # New helper function for curses-based menu selection
 def display_curses_menu(stdscr, title, options_list):
     curses.curs_set(0)  # Hide the cursor
