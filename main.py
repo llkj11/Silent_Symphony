@@ -382,34 +382,39 @@ def game():
                 chosen_poi_def = None # Initialize chosen_poi_def
 
                 if chosen_poi_display_text == "Ignore these and look around generally":
-                    ai_narrative_context = "The player chose to look around generally." 
-                    if random.random() < 0.25: 
+                    ai_narrative_context = f"Player {player['name']} is in '{current_location_data.get('name')}' and looks around generally."
+                    
+                    # Game logic decides the type of general encounter first.
+                    # Let's have a chance for item, enemy, or just narrative.
+                    rand_outcome = random.random()
+                    
+                    if rand_outcome < 0.20: # 20% chance to find a common item
                         common_items = current_location_data.get('items_common_find', [])
                         if common_items:
+                            # Game determines the item internally. AI will narrate finding *something*.
                             determined_item_ids_to_give.append(random.choice(common_items))
                             expected_function_call_name = "player_discovers_item"
-                            ai_narrative_context = f"While looking around generally in '{current_location_data.get('name')}', the player stumbles upon an item."
-                    # Temporarily force this path for testing:
-                    # elif random.random() < 0.15: 
-                    elif True: # FORCED ENEMY ENCOUNTER TEST for 'look around generally'
-                        print("DEBUG: Attempting 'look around generally' enemy encounter (chance forced to 100%).") 
-                        generic_enemy_groups = current_location_data.get('encounter_groups', ["generic_weak_creatures"])
+                            ai_narrative_context += " They stumble upon a minor item of interest."
+                        else: # No common items defined for this location
+                            expected_function_call_name = "narrative_outcome"
+                            ai_narrative_context += " They find nothing out of the ordinary."
+                    elif rand_outcome < 0.35: # Additional 15% chance for an enemy (total 20% item, 15% enemy)
+                        generic_enemy_groups = current_location_data.get('encounter_groups', [])
                         if generic_enemy_groups:
                             group_to_use = random.choice(generic_enemy_groups)
-                            print(f"DEBUG: Chosen enemy group for general look around: {group_to_use}") 
                             determined_enemy_id_to_spawn = get_random_enemy_for_location(current_location_id, specific_group=group_to_use)
-                            print(f"DEBUG: Determined enemy to spawn from general look around: {determined_enemy_id_to_spawn}") 
                             if determined_enemy_id_to_spawn:
                                 expected_function_call_name = "player_encounters_enemy"
-                                ai_narrative_context = f"While looking around generally in '{current_location_data.get('name')}', the player is surprised by an enemy."
-                            else:
-                                print("DEBUG: get_random_enemy_for_location returned None for 'look around generally' despite forced attempt.")
-                                # Fallback to narrative if no enemy could be spawned from group
-                                ai_narrative_context = f"Player {player['name']} is in '{current_location_data.get('name')}' and looks around generally, finding nothing out of the ordinary."
+                                ai_narrative_context += " Suddenly, they are surprised by an enemy!"
+                            else: # Failed to spawn an enemy from the group
                                 expected_function_call_name = "narrative_outcome"
-                    if not determined_item_ids_to_give and not determined_enemy_id_to_spawn: # Ensure it still defaults to narrative if forced paths fail
-                        ai_narrative_context = f"Player {player['name']} is in '{current_location_data.get('name')}' and looks around generally, finding nothing out of the ordinary."
+                                ai_narrative_context += " They thought they saw something, but it was just a shadow."
+                        else: # No enemy groups defined
+                            expected_function_call_name = "narrative_outcome"
+                            ai_narrative_context += " The area seems quiet."
+                    else: # Default to narrative outcome (65% chance)
                         expected_function_call_name = "narrative_outcome"
+                        ai_narrative_context += " They find nothing particularly noteworthy."
                 else:
                     chosen_poi_def = next((poi for poi in available_pois_to_present if poi.get('display_text_for_player_choice') == chosen_poi_display_text), None)
                     if chosen_poi_def:
@@ -469,12 +474,20 @@ def game():
                 # Construct the AI prompt for Stage 3
                 if expected_function_call_name == "player_discovers_item":
                     # If multiple items, AI should narrate finding them. We pass first item for tagging guidance.
-                    item_id_for_ai_prompt = determined_item_ids_to_give[0] if determined_item_ids_to_give else "some_treasure"
+                    # For "look around generally", item_id_for_ai_prompt is now less critical as game picks the item.
+                    item_id_for_ai_prompt = determined_item_ids_to_give[0] if determined_item_ids_to_give else "some_trinket"
                     item_name_for_ai_prompt = items.ITEM_DB.get(item_id_for_ai_prompt, {}).get("name", item_id_for_ai_prompt.replace("_"," "))
-                    outcome_prompt = f"{ai_narrative_context} The player finds {len(determined_item_ids_to_give)} item(s). Craft a short narrative for this discovery and call 'player_discovers_item' with item_id='{item_id_for_ai_prompt}' (if multiple items, this is just one example ID for the function call) and your discovery_narrative."
+                    
+                    if chosen_poi_display_text == "Ignore these and look around generally":
+                        outcome_prompt = f"{ai_narrative_context} The game has determined the player finds a common item from this area. Craft a short narrative for this discovery and call 'player_discovers_item' with your discovery_narrative (the item_id you provide in the function call will be illustrative, the game uses its own). Example item_id: '{item_id_for_ai_prompt}'."
+                    else: # Specific POI
+                        outcome_prompt = f"{ai_narrative_context} The player finds {len(determined_item_ids_to_give)} item(s). Craft a short narrative for this discovery and call 'player_discovers_item' with item_id='{item_id_for_ai_prompt}' (if multiple items, this is one example ID for the function call) and your discovery_narrative."
                 elif expected_function_call_name == "player_encounters_enemy":
                     enemy_name_for_ai_prompt = entities.ENEMY_TEMPLATES.get(determined_enemy_id_to_spawn, {}).get("name", "a creature")
-                    outcome_prompt = f"{ai_narrative_context} An enemy ({enemy_name_for_ai_prompt}) appears! Craft a short narrative for this encounter and call 'player_encounters_enemy' with enemy_id='{determined_enemy_id_to_spawn}' and your encounter_narrative."
+                    if chosen_poi_display_text == "Ignore these and look around generally":
+                         outcome_prompt = f"{ai_narrative_context} The game has determined an enemy encounter from this area's typical inhabitants. Craft a short narrative for this encounter and call 'player_encounters_enemy' with enemy_id='{determined_enemy_id_to_spawn}' (this ID is game-determined) and your encounter_narrative."
+                    else: # Specific POI trap
+                        outcome_prompt = f"{ai_narrative_context} An enemy ({enemy_name_for_ai_prompt}) appears! Craft a short narrative for this encounter and call 'player_encounters_enemy' with enemy_id='{determined_enemy_id_to_spawn}' and your encounter_narrative."
                 else: # narrative_outcome
                     outcome_prompt = f"{ai_narrative_context} Describe this scene or outcome. Call 'narrative_outcome' with your narrative_text."
 
@@ -496,15 +509,27 @@ def game():
                                     if function_call.name == "player_discovers_item":
                                         narrative = function_call.args.get('discovery_narrative', "You find something.")
                                         print(f"\n{narrative}")
-                                        if determined_item_ids_to_give: # Use game-determined items
-                                            for item_id in determined_item_ids_to_give:
-                                                if item_id in items.ITEM_DB:
-                                                    player['inventory'].append(item_id)
-                                                    print(f"You obtained: {items.ITEM_DB[item_id]['name']}! Added to inventory.")
-                                                elif config.DEBUG_MODE: print(f"DEBUG: Game logic provided unknown item_id: {item_id}")
-                                        else: # AI called discover but game logic found nothing (should be rare with new flow)
-                                            if config.DEBUG_MODE: print(f"DEBUG: AI called discover_item but game logic had no items.")
-                                            print("It seemed valuable, but crumbled to dust.")
+                                        if chosen_poi_display_text == "Ignore these and look around generally":
+                                            # Game already determined the item(s) in determined_item_ids_to_give
+                                            if determined_item_ids_to_give:
+                                                for item_id in determined_item_ids_to_give: # Should usually be one for this path
+                                                    if item_id in items.ITEM_DB:
+                                                        player['inventory'].append(item_id)
+                                                        print(f"You obtained: {items.ITEM_DB[item_id]['name']}! Added to inventory.")
+                                                    elif config.DEBUG_MODE: print(f"DEBUG: Game logic for 'general look around' provided unknown item_id: {item_id}")
+                                            else: # Game logic decided item, but list was empty or error
+                                                if config.DEBUG_MODE: print(f"DEBUG: 'General look around' was to give item, but determined_item_ids_to_give is empty.")
+                                                print("...but it turns out to be nothing of consequence.")
+                                        else: # Item discovery from a specific POI
+                                            if determined_item_ids_to_give: # Use game-determined items
+                                                for item_id in determined_item_ids_to_give:
+                                                    if item_id in items.ITEM_DB:
+                                                        player['inventory'].append(item_id)
+                                                        print(f"You obtained: {items.ITEM_DB[item_id]['name']}! Added to inventory.")
+                                                    elif config.DEBUG_MODE: print(f"DEBUG: Game logic provided unknown item_id for POI: {item_id}")
+                                            else: 
+                                                if config.DEBUG_MODE: print(f"DEBUG: POI AI called discover_item but game logic had no items.")
+                                                print("It seemed valuable, but crumbled to dust.")
                                         function_called_successfully = True; break
                                     
                                     elif function_call.name == "player_encounters_enemy":
@@ -562,11 +587,23 @@ def game():
                                 if function_name == "player_discovers_item":
                                     narrative = args.get('discovery_narrative', "You find something.")
                                     print(f"\n{narrative}")
-                                    if determined_item_ids_to_give:
-                                        for item_id in determined_item_ids_to_give:
-                                            if item_id in items.ITEM_DB: player['inventory'].append(item_id); print(f"You obtained: {items.ITEM_DB[item_id]['name']}! Added to inventory.")
-                                            elif config.DEBUG_MODE: print(f"DEBUG: Game logic provided unknown item_id: {item_id}")
-                                    else: print("It seemed valuable, but crumbled to dust.")
+                                    if chosen_poi_display_text == "Ignore these and look around generally":
+                                        # Game already determined the item(s) in determined_item_ids_to_give
+                                        if determined_item_ids_to_give:
+                                            for item_id in determined_item_ids_to_give: # Should usually be one for this path
+                                                if item_id in items.ITEM_DB:
+                                                    player['inventory'].append(item_id)
+                                                    print(f"You obtained: {items.ITEM_DB[item_id]['name']}! Added to inventory.")
+                                                elif config.DEBUG_MODE: print(f"DEBUG: Game logic for 'general look around' (OpenAI) provided unknown item_id: {item_id}")
+                                        else: # Game logic decided item, but list was empty or error
+                                            if config.DEBUG_MODE: print(f"DEBUG: 'General look around' (OpenAI) was to give item, but determined_item_ids_to_give is empty.")
+                                            print("...but it turns out to be nothing of consequence.")
+                                    else: # Item discovery from a specific POI
+                                        if determined_item_ids_to_give:
+                                            for item_id in determined_item_ids_to_give:
+                                                if item_id in items.ITEM_DB: player['inventory'].append(item_id); print(f"You obtained: {items.ITEM_DB[item_id]['name']}! Added to inventory.")
+                                                elif config.DEBUG_MODE: print(f"DEBUG: Game logic provided unknown item_id for POI (OpenAI): {item_id}")
+                                        else: print("It seemed valuable, but crumbled to dust.")
                                     function_called_successfully = True; break
                                 
                                 elif function_name == "player_encounters_enemy":
