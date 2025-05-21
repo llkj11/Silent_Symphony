@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 testscriptgemini.py
 sdk_test.py
+/rpg
