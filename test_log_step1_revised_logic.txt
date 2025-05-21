@@ -1,0 +1,149 @@
+Google GenAI SDK (google-genai) not installed. AI features may be limited or unavailable.
+OpenAI SDK imported successfully.
+Skipping OpenAI AI initialization. OPENAI_API_KEY not found in .env.
+Welcome to The Silent Symphony - Main Menu
+What would you like to do?
+  1. Start New Game
+  2. Load Game
+Enter your choice (1-2): Welcome to The Silent Symphony!
+Quick Start character creation? (y/n): 
+Quick Start selected! Your character is Rynn, a Dwarf Highborn born under the sign of Tempest.
+
+--- Your Story Begins ---
+
+    You awaken to the gentle lapping of waves, the caress of seafoam at your feet, a stark contrast to the tempest that raged just hours before. Your body lies heavy upon the wet sand, each breath a testament to your survival against the capricious wrath of the sea. As your eyes flutter open, the blurred edges of reality sharpen, revealing the sun-drenched shores of some land unknown to you, Rynn.
+
+Memories flash like lightning across the firmament of your mind — the creaking of wood, the howl of the storm, the desperate cries of your companions now lost to the abyss. The details of your past voyage are as scattered as the flotsam strewn about the beach, but one thing is clear: you are far from home.
+
+This land greets you with its wild, untamed beauty. Towering cliffs crowned with verdure rise to the east, and to the west, the ocean spans the horizon, a sapphire sheet etched with the gold of the dawning day. 
+
+Now, as destiny's hand guides you forth from the shores of providence, you stand at the threshold of a new beginning. Here, amidst the echoes of a history both grand and cruel, you, a Dwarf of Highborn origin, born under the sign of Tempest, will find your place in the stories yet unwritten. Your journey begins not with the remembrance of whence you came, but with the promise of what lies ahead.
+
+With the salt on your lips and the horizon calling, you rise. The path before you is fraught with shadows and light, danger and opportunity. Every step is a story, and every choice carves the key to your future.
+
+As you take your first steps into the unknown, you can't shake the feeling that your arrival was no mere accident. The threads of destiny are woven tight around your fate, and only time will reveal the role you are to play in this new world. 
+    
+
+Welcome, Rynn the Dwarf Highborn, born under the sign of Tempest. Your journey begins now...
+
+--- Game Start ---
+DEBUG: AI error for initial loc desc: [AI Fallback - Global AI Client not initialized for provider OPENAI. Prompt: 'The player has just arrived at the Shifting Sands Beach. Describe the scene atmospherically: the relentless sun, the sound of waves, scattered driftwood, perhaps the distant shimmer of dunes or dark rocks. Convey a sense of new beginnings and underlying mystery or potential danger.']
+
+You arrive at Shifting Sands Beach. You take a moment to get your bearings. (AI communication issue)
+
+--- Current Location: Shifting Sands Beach ---
+
+What would you like to do?
+1. Explore this area
+2. Move to another area
+3. Manage Inventory
+4. View character stats
+5. Save Game
+6. Quit game
+> 
+You decide to look around more closely...
+DEBUG: POI Filter: All defined POI IDs for 'beach_starting': ['beach_log_markings', 'beach_chest_barnacled', 'beach_dune_path', 'beach_seabirds_shiny']
+DEBUG: POI Filter: Completed POI IDs for 'beach_starting': set()
+DEBUG: POI Filter: Available (pre-sample) POI IDs after filtering: ['beach_log_markings', 'beach_chest_barnacled', 'beach_dune_path', 'beach_seabirds_shiny']
+DEBUG: POI Filter: POIs presented to player (post-sample): ['beach_dune_path', 'beach_log_markings', 'beach_seabirds_shiny']
+
+You notice:
+What do you want to investigate further?
+  1. A narrow, almost hidden path leading into the dunes.
+  2. A large, weathered driftwood log with strange markings.
+  3. A flock of unusual seabirds squabbling over something shiny.
+  4. Ignore these and look around generally
+Enter your choice (1-4): DEBUG (Stage 3 AI Prompt): The player startles the seabirds, and they fly off, taking the shiny object with them. Describe this scene or outcome. Call 'narrative_outcome' with your narrative_text.
+
+You investigate, but nothing definitive happens.
+DEBUG: Stage 3 AI did not call a specific function or provide recognized output. Printed fallback or direct text if available.
+DEBUG: Marked POI 'beach_seabirds_shiny' in 'beach_starting' as completed (Revised Location).
+
+--- Current Location: Shifting Sands Beach ---
+
+What would you like to do?
+1. Explore this area
+2. Move to another area
+3. Manage Inventory
+4. View character stats
+5. Save Game
+6. Quit game
+> 
+You decide to look around more closely...
+DEBUG: POI Filter: All defined POI IDs for 'beach_starting': ['beach_log_markings', 'beach_chest_barnacled', 'beach_dune_path', 'beach_seabirds_shiny']
+DEBUG: POI Filter: Completed POI IDs for 'beach_starting': {'beach_seabirds_shiny'}
+DEBUG: POI Filter: Available (pre-sample) POI IDs after filtering: ['beach_log_markings', 'beach_chest_barnacled', 'beach_dune_path']
+DEBUG: Filtered POIs. Original count: 4, Available for selection count: 3
+DEBUG: POI Filter: POIs presented to player (post-sample): ['beach_log_markings', 'beach_chest_barnacled']
+
+You notice:
+What do you want to investigate further?
+  1. A large, weathered driftwood log with strange markings.
+  2. A half-buried, barnacle-encrusted chest.
+  3. Ignore these and look around generally
+Enter your choice (1-3): DEBUG (Stage 3 AI Prompt): The player examines the strange markings on the driftwood log. Describe what they see or decipher. This is a clue, not a physical item. Describe this scene or outcome. Call 'narrative_outcome' with your narrative_text.
+
+You investigate, but nothing definitive happens.
+DEBUG: Stage 3 AI did not call a specific function or provide recognized output. Printed fallback or direct text if available.
+DEBUG: Marked POI 'beach_log_markings' in 'beach_starting' as completed (Revised Location).
+DEBUG: General random encounter triggered (chance: 0.2).
+DEBUG get_random_enemy_for_location: Called with location_id='beach_starting', specific_group='None'
+DEBUG get_random_enemy_for_location: current_location_data: True
+DEBUG get_random_enemy_for_location: encounter_group_names_for_location: ['beach_low_level']
+DEBUG get_random_enemy_for_location: chosen_group_name: beach_low_level
+DEBUG get_random_enemy_for_location: encounter_list for group 'beach_low_level': [{'enemy_id': 'giant_sand_crab', 'weight': 60}, {'enemy_id': 'sea_serpent_hatchling', 'weight': 15}, {'enemy_id': 'goblin_scout', 'weight': 25}]
+DEBUG get_random_enemy_for_location: total_weight: 100
+DEBUG get_random_enemy_for_location: Weighted choice selected: giant_sand_crab
+
+You hear a rustling nearby, and a wild creature appears!
+
+--- Combat Initiated! ---
+
+Your Health: 30/30 | Giant Sand Crab Health: 25
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 2 damage to the Giant Sand Crab! Enemy health is now 23.
+The Giant Sand Crab attacks you for 3 damage! You take 3 damage. Your health is now 27.
+
+Your Health: 27/30 | Giant Sand Crab Health: 23
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 3 damage to the Giant Sand Crab! Enemy health is now 20.
+The Giant Sand Crab attacks you for 3 damage! You take 3 damage. Your health is now 24.
+
+Your Health: 24/30 | Giant Sand Crab Health: 20
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 6 damage to the Giant Sand Crab! Enemy health is now 14.
+The Giant Sand Crab attacks you for 6 damage! You take 6 damage. Your health is now 18.
+
+Your Health: 18/30 | Giant Sand Crab Health: 14
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 5 damage to the Giant Sand Crab! Enemy health is now 9.
+The Giant Sand Crab attacks you for 6 damage! You take 6 damage. Your health is now 12.
+
+Your Health: 12/30 | Giant Sand Crab Health: 9
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 2 damage to the Giant Sand Crab! Enemy health is now 7.
+The Giant Sand Crab attacks you for 7 damage! You take 7 damage. Your health is now 5.
+
+Your Health: 5/30 | Giant Sand Crab Health: 7
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 6 damage to the Giant Sand Crab! Enemy health is now 1.
+The Giant Sand Crab attacks you for 6 damage! You take 6 damage. Your health is now -1.
+You have been defeated!

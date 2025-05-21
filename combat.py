@@ -18,7 +18,7 @@ def combat(player_character, enemy_instance):
     # Description is now printed before calling combat in main.py
     # print(f"You've encountered a {enemy_name}! {enemy_instance['description']}") 
 
-    combat_actions = ["Attack", "Flee"]
+    combat_actions = ["Attack", "Use Item", "Flee"]
 
     while player_health > 0 and enemy_health > 0:
         print(f"\nYour Health: {player_health}/{player_character['max_health']} | {enemy_name} Health: {enemy_health}")
@@ -71,6 +71,105 @@ def combat(player_character, enemy_instance):
                 actual_damage_taken = max(0, enemy_raw_attack - total_player_defense)
                 player_health -= actual_damage_taken
                 print(f"The {enemy_name} attacks you for {enemy_raw_attack} damage!{defense_display} You take {actual_damage_taken} damage. Your health is now {player_health}.")
+
+        elif action == "Use Item":
+            # Filter inventory for combat-usable items
+            usable_items_in_inventory = {} # Dict to store item_id: count for display
+            temp_inventory_for_display = list(player_character['inventory']) # Create a copy for iteration if removing
+
+            for item_id in temp_inventory_for_display:
+                if item_id in items.ITEM_DB:
+                    item_def = items.ITEM_DB[item_id]
+                    # Check for 'combat_usable' and the presence of 'effects' dictionary
+                    if item_def.get('combat_usable') and isinstance(item_def.get('effects'), dict):
+                        usable_items_in_inventory[item_id] = usable_items_in_inventory.get(item_id, 0) + 1
+            
+            if not usable_items_in_inventory:
+                print("You have no items usable in combat right now.")
+                # Turn is not consumed if no item could be selected/used
+                continue # Skip to next player turn, back to action selection
+
+            print("\nWhich item do you want to use?")
+            item_choices_display = []
+            item_ids_for_choice = [] # To map chosen number back to item_id
+            
+            for item_id, count in usable_items_in_inventory.items():
+                item_name = items.ITEM_DB[item_id]['name']
+                item_choices_display.append(f"{item_name} (x{count})")
+                item_ids_for_choice.append(item_id)
+
+            item_choices_display.append("[Cancel - Go Back]")
+            chosen_item_display = ui.get_numbered_choice("Select an item:", item_choices_display)
+
+            if chosen_item_display == "[Cancel - Go Back]":
+                # Turn is not consumed if player cancels
+                continue 
+
+            # Determine the chosen item_id
+            chosen_item_index = item_choices_display.index(chosen_item_display)
+            chosen_item_id = item_ids_for_choice[chosen_item_index]
+            item_to_use_def = items.ITEM_DB[chosen_item_id]
+
+            # --- Step 3: Handle Item Selection and Effect Application ---
+            item_effects = item_to_use_def.get('effects', {})
+            effect_applied_message = f"You used {item_to_use_def['name']}."
+            turn_consumed = False
+
+            if "heal_hp" in item_effects:
+                heal_amount = item_effects["heal_hp"]
+                old_health = player_health
+                player_health = min(player_character['max_health'], player_health + heal_amount)
+                healed_for = player_health - old_health
+                effect_applied_message += f" You restored {healed_for} HP."
+                if player_health == old_health and old_health == player_character['max_health']:
+                    effect_applied_message += " You are already at maximum health."
+                print(effect_applied_message)
+                turn_consumed = True
+            
+            # Add other effects like "restore_mana" here if needed in future
+            # elif "restore_mana" in item_effects:
+            #    ... similar logic for mana ...
+            #    turn_consumed = True
+
+            else: # Item had no recognized effect in combat or was purely narrative
+                print(f"You use the {item_to_use_def['name']}, but it has no immediate combat effect.")
+                # Decide if using an item with no recognized combat effect consumes a turn.
+                # For now, let's assume it does if it was 'combat_usable'.
+                turn_consumed = True 
+
+            if turn_consumed:
+                player_character['inventory'].remove(chosen_item_id) # Remove one instance
+                print(f"{item_to_use_def['name']} removed from inventory.")
+                
+                # Enemy attacks player (as turn is consumed)
+                if enemy_health > 0: 
+                    enemy_raw_attack = random.randint(enemy_attack_min, enemy_attack_max)
+                    player_armor_defense = 0
+                    equipped_armor_id = player_character.get('equipped_armor')
+                    armor_name_display = ""
+                    if equipped_armor_id and equipped_armor_id in items.ITEM_DB:
+                        armor_data = items.ITEM_DB[equipped_armor_id]
+                        if armor_data.get('type') == 'armor':
+                            player_armor_defense = armor_data.get('defense_bonus', 0)
+                            armor_name_display = f" (defended by {armor_data['name']})"
+                    
+                    player_shield_defense = 0
+                    equipped_shield_id = player_character.get('equipped_shield')
+                    shield_name_display = ""
+                    if equipped_shield_id and equipped_shield_id in items.ITEM_DB:
+                        shield_data = items.ITEM_DB[equipped_shield_id]
+                        if shield_data.get('type') == 'shield':
+                            player_shield_defense = shield_data.get('defense_bonus', 0)
+                            shield_name_display = f" and {shield_data['name']}" if armor_name_display else f" (defended by {shield_data['name']})"
+
+                    total_player_defense = player_armor_defense + player_shield_defense
+                    defense_display = f"{armor_name_display}{shield_name_display}"
+                    actual_damage_taken = max(0, enemy_raw_attack - total_player_defense)
+                    player_health -= actual_damage_taken
+                    print(f"The {enemy_name} attacks you for {enemy_raw_attack} damage!{defense_display} You take {actual_damage_taken} damage. Your health is now {player_health}.")
+            else: # if not turn_consumed (e.g. item had no recognized effect and we decide not to consume turn)
+                pass # Or 'continue' if we want to re-prompt for action immediately
+
         elif action == 'Flee':
             print("You managed to flee!")
             player_character['health'] = player_health

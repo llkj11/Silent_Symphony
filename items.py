@@ -26,7 +26,8 @@ ITEM_DB = {
         "name": "Minor Healing Salve",
         "description": "A soothing balm that mends minor wounds.",
         "type": "consumable",
-        "effect": {"heal": 5}, # Restores 5 health points
+        "effects": {"heal_hp": 15}, 
+        "combat_usable": True,
         "value": 10
     },
     "rusty_dagger": {
@@ -54,7 +55,8 @@ ITEM_DB = {
         "name": "Lesser Healing Potion",
         "description": "A common potion that restores a small amount of health.",
         "type": "consumable",
-        "effect": {"heal": 15},
+        "effects": {"heal_hp": 25}, # Increased healing value
+        "combat_usable": True,
         "value": 25
     },
     "mana_potion_minor": {
@@ -62,7 +64,8 @@ ITEM_DB = {
         "name": "Minor Mana Potion",
         "description": "A shimmering liquid that slightly restores magical energy.",
         "type": "consumable",
-        "effect": {"restore_mana": 10},
+        "effects": {"restore_mana": 10},
+        "combat_usable": True,
         "value": 20
     },
     "antidote_simple": {
@@ -126,7 +129,8 @@ ITEM_DB = {
         "name": "Herbal Poultice",
         "description": "A mix of healing herbs to apply to wounds.",
         "type": "consumable",
-        "effect": {"heal": 8, "cure_bleeding": True},
+        "effects": {"heal_hp": 8, "cure_bleeding": True}, # Standardized heal effect key
+        "combat_usable": True,
         "value": 18
     },
 

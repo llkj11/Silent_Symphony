@@ -318,20 +318,30 @@ def game():
                 # --- Filter out completed POIs ---
                 completed_poi_ids_for_current_location = player['completed_pois'].get(current_location_id, set())
                 
+                if config.DEBUG_MODE:
+                    defined_ids = [poi.get('poi_id', 'NO_ID') for poi in defined_pois_for_location]
+                    print(f"DEBUG: POI Filter: All defined POI IDs for '{current_location_id}': {defined_ids}")
+                    print(f"DEBUG: POI Filter: Completed POI IDs for '{current_location_id}': {completed_poi_ids_for_current_location}")
+
                 available_pois_for_selection = [
                     poi for poi in defined_pois_for_location 
                     if poi.get('poi_id') not in completed_poi_ids_for_current_location
                 ]
                 if config.DEBUG_MODE:
+                    selected_ids = [poi.get('poi_id', 'NO_ID') for poi in available_pois_for_selection]
+                    print(f"DEBUG: POI Filter: Available (pre-sample) POI IDs after filtering: {selected_ids}")
+                    # Original debug messages, can be kept or removed if redundant with new ones
                     if len(defined_pois_for_location) != len(available_pois_for_selection):
-                        print(f"DEBUG: Filtered POIs. Original: {len(defined_pois_for_location)}, Available for selection: {len(available_pois_for_selection)}")
-                        print(f"DEBUG: Completed POIs for {current_location_id}: {completed_poi_ids_for_current_location}")
+                        print(f"DEBUG: Filtered POIs. Original count: {len(defined_pois_for_location)}, Available for selection count: {len(available_pois_for_selection)}")
 
                 available_pois_to_present = []
                 if available_pois_for_selection:
                     # Select a subset of POIs to present to the player (e.g., 2 to 4)
                     num_pois_to_offer = min(len(available_pois_for_selection), random.randint(2, 4))
                     available_pois_to_present = random.sample(available_pois_for_selection, num_pois_to_offer)
+                    if config.DEBUG_MODE:
+                        presented_ids = [poi.get('poi_id', 'NO_ID') for poi in available_pois_to_present]
+                        print(f"DEBUG: POI Filter: POIs presented to player (post-sample): {presented_ids}")
                 
                 if not available_pois_to_present:
                     print("You scan the area intently, but nothing specific catches your eye for closer investigation right now.")
@@ -369,6 +379,7 @@ def game():
                 # Default to narrative_outcome, specific POI logic might change this
                 expected_function_call_name = "narrative_outcome" 
                 ai_narrative_context = ""
+                chosen_poi_def = None # Initialize chosen_poi_def
 
                 if chosen_poi_display_text == "Ignore these and look around generally":
                     ai_narrative_context = "The player chose to look around generally." 
@@ -499,16 +510,7 @@ def game():
                                     elif function_call.name == "player_encounters_enemy":
                                         narrative = function_call.args.get('encounter_narrative', "Danger appears!")
                                         print(f"\n{narrative}")
-                                        if determined_enemy_id_to_spawn: # Use game-determined enemy
-                                            enemy_instance = entities.get_enemy_instance(determined_enemy_id_to_spawn)
-                                            if enemy_instance: 
-                                                combat_result = combat.combat(player, enemy_instance)
-                                                game_over = True if combat_result == "lost" else game_over
-                                                combat_occurred_this_action = True
-                                            else: print("A menacing presence fades.")
-                                        else: # AI called encounter but game logic had no enemy (should be rare)
-                                            if config.DEBUG_MODE: print(f"DEBUG: AI called encounter_enemy but game logic had no enemy.")
-                                            print("You sense danger, but it quickly passes.")
+                                        # Combat will be initiated AFTER the try/except block based on determined_enemy_id_to_spawn
                                         function_called_successfully = True; break
                                     
                                     elif function_call.name == "narrative_outcome":
@@ -545,6 +547,8 @@ def game():
                                     if mark_completed:
                                         player['completed_pois'].setdefault(current_location_id, set()).add(poi_id_to_complete)
                                         if config.DEBUG_MODE: print(f"DEBUG: Marked POI '{poi_id_to_complete}' in '{current_location_id}' as completed.")
+                    # This block should be outside the AI-specific path or called reliably.
+                    # Let's move the POI completion marking to after the try-except for AI response handling.
                                 
                     # --- OPENAI PATH ---
                     elif config.AI_PROVIDER == "OPENAI":
@@ -568,14 +572,7 @@ def game():
                                 elif function_name == "player_encounters_enemy":
                                     narrative = args.get('encounter_narrative', "Danger appears!")
                                     print(f"\n{narrative}")
-                                    if determined_enemy_id_to_spawn:
-                                        enemy_instance = entities.get_enemy_instance(determined_enemy_id_to_spawn)
-                                        if enemy_instance: 
-                                            combat_result = combat.combat(player, enemy_instance)
-                                            game_over = True if combat_result == "lost" else game_over
-                                            combat_occurred_this_action = True
-                                        else: print("A menacing presence fades.")
-                                    else: print("You sense danger, but it quickly passes.")
+                                    # Combat will be initiated AFTER the try/except block based on determined_enemy_id_to_spawn
                                     function_called_successfully = True; break
                                 
                                 elif function_name == "narrative_outcome":
@@ -601,10 +598,11 @@ def game():
                                     if mark_completed:
                                         player['completed_pois'].setdefault(current_location_id, set()).add(poi_id_to_complete)
                                         if config.DEBUG_MODE: print(f"DEBUG: Marked POI '{poi_id_to_complete}' in '{current_location_id}' as completed (OpenAI path).")
+                    # This block should be outside the AI-specific path or called reliably.
+                    # Let's move the POI completion marking to after the try-except for AI response handling.
 
                     if not function_called_successfully: 
                         # ... (fallback if AI didn't make a valid function call at all in Stage 3)
-                        desc_text = "You investigate, but nothing definitive happens."
                         # (Simplified fallback text extraction)
                         # Try to get text from AI response if it exists and is simple text
                         fallback_narrative = "You investigate, but nothing definitive happens."
@@ -617,8 +615,10 @@ def game():
                             if hasattr(ai_response_stage3, 'choices') and ai_response_stage3.choices and \
                             hasattr(ai_response_stage3.choices[0], 'message') and ai_response_stage3.choices[0].message.content:
                                 fallback_narrative = ai_response_stage3.choices[0].message.content or fallback_narrative
-                        print(f"\n{fallback_narrative}")
-                        if config.DEBUG_MODE: print(f"DEBUG: Stage 3 AI did not call a function or provide recognized output. Printed fallback or direct text.")
+                        # Only print fallback if a more specific narrative wasn't already printed by a successful function call
+                        if not function_called_successfully: # Re-check, as successful calls print their own narrative
+                           print(f"\n{fallback_narrative}")
+                        if config.DEBUG_MODE: print(f"DEBUG: Stage 3 AI did not call a specific function or provide recognized output. Printed fallback or direct text if available.")
 
                 except Exception as e_stage3:
                     # ... (exception handling)
@@ -626,6 +626,71 @@ def game():
                     if config.DEBUG_MODE: import traceback; traceback.print_exc()
                     print("\nThe world seems to momentarily warp around your focus, then settles.")
 
+                # --- Initiate Combat if Determined by Game Logic (Moved from AI response handling) ---
+                if not combat_occurred_this_action and expected_function_call_name == "player_encounters_enemy" and determined_enemy_id_to_spawn:
+                    if not function_called_successfully: # AI failed to narrate the encounter specifically
+                        print("\nDanger erupts suddenly!") # Generic fallback encounter initiation narrative
+                    
+                    enemy_instance = entities.get_enemy_instance(determined_enemy_id_to_spawn)
+                    if enemy_instance:
+                        if config.DEBUG_MODE: print(f"DEBUG: Game logic initiating combat with {determined_enemy_id_to_spawn} (AI success: {function_called_successfully}).")
+                        combat_result = combat.combat(player, enemy_instance)
+                        game_over = True if combat_result == "lost" else game_over
+                        combat_occurred_this_action = True
+                    else:
+                        if config.DEBUG_MODE: print(f"DEBUG: Game logic determined enemy '{determined_enemy_id_to_spawn}', but failed to get instance.")
+                        if not function_called_successfully: print("The sense of danger fades as quickly as it came.")
+                
+                # --- Mark POI as completed (Moved and Revised Logic) ---
+                # Ensure chosen_poi_def is not None before trying to access its attributes
+                if chosen_poi_def is not None: 
+                    # And ensure it's not the placeholder for "Ignore these..." if that could ever be an object
+                    # However, chosen_poi_def is None if "Ignore these..." was selected.
+                    poi_id_to_complete = chosen_poi_def.get('poi_id')
+                    poi_type = chosen_poi_def.get('type')
+                    if poi_id_to_complete:
+                        mark_completed_flag = False # Renamed from mark_completed to avoid scope issues if any
+                        
+                        # Determine if POI interaction itself warrants completion
+                        # This logic should use flags set during the POI resolution (before AI call)
+                        # For now, we'll use the existing poi_type checks but make them more robust
+                        # to the AI not succeeding.
+                        
+                        if poi_type == "loot_container":
+                            is_locked = chosen_poi_def.get('locked', False)
+                            # Placeholder for actual unlock check logic. For now, assuming it can be unlocked if attempted.
+                            # This 'can_unlock_attempt_made_and_succeeded' would be set earlier in the POI interaction logic.
+                            # For this fix, we'll rely on the trap or non-locked status.
+                            # The key condition is that an interaction RESOLVED the POI.
+                            
+                            trap_sprung_for_this_poi = (chosen_poi_def.get('trap_enemy_id') and \
+                                                        determined_enemy_id_to_spawn == chosen_poi_def.get('trap_enemy_id') and \
+                                                        expected_function_call_name == "player_encounters_enemy") # Ensure this enemy spawn was for the POI trap
+
+                            opened_without_trap_or_after_disarm = False
+                            if not trap_sprung_for_this_poi: # Only consider opening if a trap didn't spring or doesn't exist
+                                if not is_locked: # Not locked
+                                    opened_without_trap_or_after_disarm = True
+                                elif is_locked and True: # Locked, but can_unlock is currently True (placeholder)
+                                    # This assumes the interaction attempt included trying to open it.
+                                    # A more robust check would be if expected_function_call_name was 'player_discovers_item' for this POI
+                                    # or a specific narrative for an empty container.
+                                    # For now, if it wasn't a trap and it was "resolved" (AI called or fallback), assume opened.
+                                    if expected_function_call_name != "player_encounters_enemy": # Avoid marking complete if it was locked and trap failed
+                                        opened_without_trap_or_after_disarm = True
+                            
+                            if trap_sprung_for_this_poi or opened_without_trap_or_after_disarm:
+                                mark_completed_flag = True
+                                
+                        elif poi_type == "loot_scatter":
+                            mark_completed_flag = True # Always completed after attempt
+                        elif poi_type in ["clue_object", "simple_description", "navigation_hint"]:
+                            mark_completed_flag = True # Completed after first interaction
+                        
+                        if mark_completed_flag:
+                            player['completed_pois'].setdefault(current_location_id, set()).add(poi_id_to_complete)
+                            if config.DEBUG_MODE: print(f"DEBUG: Marked POI '{poi_id_to_complete}' in '{current_location_id}' as completed (Revised Location).")
+                            
                 # --- General Random Encounter Chance (Post-Action) ---
                 if not game_over and not combat_occurred_this_action: # Only if player is alive and no combat happened yet this action
                     if random.random() < config.GENERAL_RANDOM_ENCOUNTER_CHANCE: # e.g. 0.20 for 20%
@@ -715,6 +780,7 @@ def game():
                 print(f"Health: {player['health']}/{player['max_health']}")
                 print(f"Level: {player['level']}")
                 print(f"XP: {player['xp']}/{player['xp_to_next_level']}")
+                print(f"Mana: {player.get('mana', 0)}/{player.get('max_mana', 0)}")
                 equipped_weapon_name = items.ITEM_DB[player['equipped_weapon']]['name'] if player['equipped_weapon'] else "None"
                 equipped_armor_name = items.ITEM_DB[player['equipped_armor']]['name'] if player['equipped_armor'] else "None"
                 equipped_shield_name = items.ITEM_DB[player['equipped_shield']]['name'] if player['equipped_shield'] else "None"

@@ -62,6 +62,16 @@ def load_game_state(filename):
         for location_id, poi_ids in player_data['completed_pois'].items():
             if isinstance(poi_ids, list): # Compatibility for potential old format
                 player_data['completed_pois'][location_id] = set(poi_ids)
+        
+        # Add default spell/mana attributes for older saves
+        player_data.setdefault('known_spells', ['minor_heal'])
+        player_data.setdefault('max_mana', 10)
+        # Ensure mana is set, defaults to max_mana if missing, and doesn't exceed current max_mana
+        current_max_mana = player_data.get('max_mana', 10)
+        player_data.setdefault('mana', current_max_mana)
+        if player_data['mana'] > current_max_mana:
+            player_data['mana'] = current_max_mana
+            
         print(f"Game loaded from '{actual_filename}'.") # Use actual_filename for user message
         return player_data
     except IOError as e:

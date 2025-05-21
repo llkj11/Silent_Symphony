@@ -1,0 +1,175 @@
+Google GenAI SDK (google-genai) not installed. AI features may be limited or unavailable.
+OpenAI SDK imported successfully.
+Skipping OpenAI AI initialization. OPENAI_API_KEY not found in .env.
+Welcome to The Silent Symphony - Main Menu
+What would you like to do?
+  1. Start New Game
+  2. Load Game
+Enter your choice (1-2): Welcome to The Silent Symphony!
+Quick Start character creation? (y/n): 
+Quick Start selected! Your character is Rynn, a Elf Lowborn born under the sign of Lumos.
+
+--- Your Story Begins ---
+
+    You awaken to the gentle lapping of waves, the caress of seafoam at your feet, a stark contrast to the tempest that raged just hours before. Your body lies heavy upon the wet sand, each breath a testament to your survival against the capricious wrath of the sea. As your eyes flutter open, the blurred edges of reality sharpen, revealing the sun-drenched shores of some land unknown to you, Rynn.
+
+Memories flash like lightning across the firmament of your mind — the creaking of wood, the howl of the storm, the desperate cries of your companions now lost to the abyss. The details of your past voyage are as scattered as the flotsam strewn about the beach, but one thing is clear: you are far from home.
+
+This land greets you with its wild, untamed beauty. Towering cliffs crowned with verdure rise to the east, and to the west, the ocean spans the horizon, a sapphire sheet etched with the gold of the dawning day. 
+
+Now, as destiny's hand guides you forth from the shores of providence, you stand at the threshold of a new beginning. Here, amidst the echoes of a history both grand and cruel, you, a Elf of Lowborn origin, born under the sign of Lumos, will find your place in the stories yet unwritten. Your journey begins not with the remembrance of whence you came, but with the promise of what lies ahead.
+
+With the salt on your lips and the horizon calling, you rise. The path before you is fraught with shadows and light, danger and opportunity. Every step is a story, and every choice carves the key to your future.
+
+As you take your first steps into the unknown, you can't shake the feeling that your arrival was no mere accident. The threads of destiny are woven tight around your fate, and only time will reveal the role you are to play in this new world. 
+    
+
+Welcome, Rynn the Elf Lowborn, born under the sign of Lumos. Your journey begins now...
+
+--- Game Start ---
+DEBUG: AI error for initial loc desc: [AI Fallback - Global AI Client not initialized for provider OPENAI. Prompt: 'The player has just arrived at the Shifting Sands Beach. Describe the scene atmospherically: the relentless sun, the sound of waves, scattered driftwood, perhaps the distant shimmer of dunes or dark rocks. Convey a sense of new beginnings and underlying mystery or potential danger.']
+
+You arrive at Shifting Sands Beach. You take a moment to get your bearings. (AI communication issue)
+
+--- Current Location: Shifting Sands Beach ---
+
+What would you like to do?
+1. Explore this area
+2. Move to another area
+3. Manage Inventory
+4. View character stats
+5. Save Game
+6. Quit game
+> 
+You decide to look around more closely...
+DEBUG: POI Filter: All defined POI IDs for 'beach_starting': ['beach_log_markings', 'beach_chest_barnacled', 'beach_dune_path', 'beach_seabirds_shiny']
+DEBUG: POI Filter: Completed POI IDs for 'beach_starting': set()
+DEBUG: POI Filter: Available (pre-sample) POI IDs after filtering: ['beach_log_markings', 'beach_chest_barnacled', 'beach_dune_path', 'beach_seabirds_shiny']
+DEBUG: POI Filter: POIs presented to player (post-sample): ['beach_log_markings', 'beach_seabirds_shiny', 'beach_dune_path', 'beach_chest_barnacled']
+
+You notice:
+What do you want to investigate further?
+  1. A large, weathered driftwood log with strange markings.
+  2. A flock of unusual seabirds squabbling over something shiny.
+  3. A narrow, almost hidden path leading into the dunes.
+  4. A half-buried, barnacle-encrusted chest.
+  5. Ignore these and look around generally
+Enter your choice (1-5): DEBUG: Navigation hint POI investigated, reveals: coastal_dunes_edge
+DEBUG (Stage 3 AI Prompt): The player investigates the narrow path leading into the dunes. Describe the path and where it seems to lead, hinting at the coastal dunes beyond. Describe this scene or outcome. Call 'narrative_outcome' with your narrative_text.
+
+You investigate, but nothing definitive happens.
+DEBUG: Stage 3 AI did not call a specific function or provide recognized output. Printed fallback or direct text if available.
+DEBUG: Marked POI 'beach_dune_path' in 'beach_starting' as completed (Revised Location).
+
+--- Current Location: Shifting Sands Beach ---
+
+What would you like to do?
+1. Explore this area
+2. Move to another area
+3. Manage Inventory
+4. View character stats
+5. Save Game
+6. Quit game
+> 
+You decide to look around more closely...
+DEBUG: POI Filter: All defined POI IDs for 'beach_starting': ['beach_log_markings', 'beach_chest_barnacled', 'beach_dune_path', 'beach_seabirds_shiny']
+DEBUG: POI Filter: Completed POI IDs for 'beach_starting': {'beach_dune_path'}
+DEBUG: POI Filter: Available (pre-sample) POI IDs after filtering: ['beach_log_markings', 'beach_chest_barnacled', 'beach_seabirds_shiny']
+DEBUG: Filtered POIs. Original count: 4, Available for selection count: 3
+DEBUG: POI Filter: POIs presented to player (post-sample): ['beach_chest_barnacled', 'beach_log_markings']
+
+You notice:
+What do you want to investigate further?
+  1. A half-buried, barnacle-encrusted chest.
+  2. A large, weathered driftwood log with strange markings.
+  3. Ignore these and look around generally
+Enter your choice (1-3): DEBUG (Stage 3 AI Prompt): The player examines the strange markings on the driftwood log. Describe what they see or decipher. This is a clue, not a physical item. Describe this scene or outcome. Call 'narrative_outcome' with your narrative_text.
+
+You investigate, but nothing definitive happens.
+DEBUG: Stage 3 AI did not call a specific function or provide recognized output. Printed fallback or direct text if available.
+DEBUG: Marked POI 'beach_log_markings' in 'beach_starting' as completed (Revised Location).
+
+--- Current Location: Shifting Sands Beach ---
+
+What would you like to do?
+1. Explore this area
+2. Move to another area
+3. Manage Inventory
+4. View character stats
+5. Save Game
+6. Quit game
+> 
+You decide to look around more closely...
+DEBUG: POI Filter: All defined POI IDs for 'beach_starting': ['beach_log_markings', 'beach_chest_barnacled', 'beach_dune_path', 'beach_seabirds_shiny']
+DEBUG: POI Filter: Completed POI IDs for 'beach_starting': {'beach_dune_path', 'beach_log_markings'}
+DEBUG: POI Filter: Available (pre-sample) POI IDs after filtering: ['beach_chest_barnacled', 'beach_seabirds_shiny']
+DEBUG: Filtered POIs. Original count: 4, Available for selection count: 2
+DEBUG: POI Filter: POIs presented to player (post-sample): ['beach_chest_barnacled', 'beach_seabirds_shiny']
+
+You notice:
+What do you want to investigate further?
+  1. A half-buried, barnacle-encrusted chest.
+  2. A flock of unusual seabirds squabbling over something shiny.
+  3. Ignore these and look around generally
+Enter your choice (1-3): DEBUG: POI loot_container. Locked: True, Can Unlock (temp): True, Trapped Roll: True (Chance: 1.0)
+DEBUG: Trap sprung on POI!
+DEBUG: Trap enemy ID determined: giant_sand_crab
+DEBUG (Stage 3 AI Prompt): As the player tampers with the chest, a trap springs! An enemy (Giant Sand Crab) appears! Craft a short narrative for this encounter and call 'player_encounters_enemy' with enemy_id='giant_sand_crab' and your encounter_narrative.
+
+You investigate, but nothing definitive happens.
+DEBUG: Stage 3 AI did not call a specific function or provide recognized output. Printed fallback or direct text if available.
+
+Danger erupts suddenly!
+DEBUG: Game logic initiating combat with giant_sand_crab (AI success: False).
+
+--- Combat Initiated! ---
+
+Your Health: 30/30 | Giant Sand Crab Health: 25
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 3 damage to the Giant Sand Crab! Enemy health is now 22.
+The Giant Sand Crab attacks you for 3 damage! You take 3 damage. Your health is now 27.
+
+Your Health: 27/30 | Giant Sand Crab Health: 22
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 5 damage to the Giant Sand Crab! Enemy health is now 17.
+The Giant Sand Crab attacks you for 4 damage! You take 4 damage. Your health is now 23.
+
+Your Health: 23/30 | Giant Sand Crab Health: 17
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 2 damage to the Giant Sand Crab! Enemy health is now 15.
+The Giant Sand Crab attacks you for 6 damage! You take 6 damage. Your health is now 17.
+
+Your Health: 17/30 | Giant Sand Crab Health: 15
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 6 damage to the Giant Sand Crab! Enemy health is now 9.
+The Giant Sand Crab attacks you for 7 damage! You take 7 damage. Your health is now 10.
+
+Your Health: 10/30 | Giant Sand Crab Health: 9
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 4 damage to the Giant Sand Crab! Enemy health is now 5.
+The Giant Sand Crab attacks you for 7 damage! You take 7 damage. Your health is now 3.
+
+Your Health: 3/30 | Giant Sand Crab Health: 5
+Choose your action:
+  1. Attack
+  2. Flee
+Enter your choice (1-2): You attack with your bare hands.
+You dealt 2 damage to the Giant Sand Crab! Enemy health is now 3.
+The Giant Sand Crab attacks you for 5 damage! You take 5 damage. Your health is now -2.
+You have been defeated!
+DEBUG: Marked POI 'beach_chest_barnacled' in 'beach_starting' as completed (Revised Location).
