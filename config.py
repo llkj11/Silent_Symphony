@@ -106,7 +106,6 @@ def _convert_schema_types_to_lowercase(schema_part):
         return schema_part
 
 # --- Global AI Client and Provider-Specific Tool/Config Variables ---
-DEBUG_MODE = True 
 global_ai_client = None
 # For Gemini
 gemini_generation_config = None 

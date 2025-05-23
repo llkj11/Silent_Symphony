@@ -37,7 +37,8 @@ ENEMY_TEMPLATES = {
         "unique_loot": [
             {"item_id": "spear_common", "chance": 0.25} # higher chance for spear for scout
         ],
-        "xp_value": 10
+        "xp_value": 10,
+        "ai_traits": ["aggressive"]
     },
     "giant_sand_crab": {
         "id": "giant_sand_crab",
@@ -53,7 +54,8 @@ ENEMY_TEMPLATES = {
             {"item_id": "healing_salve_minor", "chance": 0.1},
             {"item_id": "crab_chitin_fragment", "chance": 0.5} 
         ],
-        "xp_value": 20
+        "xp_value": 20,
+        "ai_traits": ["defensive"]
     },
 
     # --- NEW ENEMIES START HERE ---
@@ -70,7 +72,8 @@ ENEMY_TEMPLATES = {
         "unique_loot": [
             {"item_id": "wooden_club", "chance": 0.6}
         ],
-        "xp_value": 15
+        "xp_value": 15,
+        "ai_traits": ["aggressive"]
     },
     "bandit_archer": {
         "id": "bandit_archer",
@@ -85,7 +88,9 @@ ENEMY_TEMPLATES = {
             {"item_id": "dull_arrowhead", "chance": 0.8},
             {"item_id": "berries_wild", "chance": 0.4}
         ],
-        "xp_value": 18
+        "xp_value": 18,
+        "special_attack": "precise_shot",
+        "ai_traits": ["cautious"]
     },
     "bandit_cutthroat": {
         "id": "bandit_cutthroat",
@@ -100,7 +105,9 @@ ENEMY_TEMPLATES = {
             {"item_id": "lockpick_simple", "chance": 0.2},
             {"item_id": "silver_ring_plain", "chance": 0.1}
         ],
-        "xp_value": 25
+        "xp_value": 25,
+        "special_attack": "backstab",
+        "ai_traits": ["aggressive", "cunning"]
     },
     "marauder_reaver": {
         "id": "marauder_reaver",

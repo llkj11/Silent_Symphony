@@ -133,6 +133,69 @@ ITEM_DB = {
         "combat_usable": True,
         "value": 18
     },
+    "smoke_bomb": {
+        "id": "smoke_bomb",
+        "name": "Smoke Bomb",
+        "description": "Creates a cloud of concealing smoke, making it easier to escape combat.",
+        "type": "consumable",
+        "effects": {"escape_chance": 0.8},  # 80% escape chance
+        "combat_usable": True,
+        "value": 35
+    },
+    "explosive_vial": {
+        "id": "explosive_vial",
+        "name": "Explosive Vial",
+        "description": "A volatile alchemical mixture that explodes on impact.",
+        "type": "consumable",
+        "effects": {"damage": 15, "ignore_armor": True},
+        "combat_usable": True,
+        "value": 50
+    },
+    "liquid_courage": {
+        "id": "liquid_courage",
+        "name": "Liquid Courage",
+        "description": "A strong drink that temporarily boosts combat effectiveness.",
+        "type": "consumable",
+        "effects": {"buff_attack": 3, "buff_crit": 0.1, "duration": 5},
+        "combat_usable": True,
+        "value": 40
+    },
+    "iron_skin_salve": {
+        "id": "iron_skin_salve",
+        "name": "Iron Skin Salve",
+        "description": "A magical salve that temporarily hardens the skin.",
+        "type": "consumable",
+        "effects": {"buff_defense": 4, "duration": 4},
+        "combat_usable": True,
+        "value": 45
+    },
+    "spirit_essence": {
+        "id": "spirit_essence",
+        "name": "Spirit Essence",
+        "description": "A shimmering essence that restores both health and mana.",
+        "type": "consumable",
+        "effects": {"heal_hp": 20, "restore_mana": 15},
+        "combat_usable": True,
+        "value": 80
+    },
+    "focus_crystal": {
+        "id": "focus_crystal",
+        "name": "Focus Crystal",
+        "description": "A crystal that enhances magical abilities temporarily.",
+        "type": "consumable",
+        "effects": {"spell_power": 5, "mana_efficiency": 2, "duration": 6},
+        "combat_usable": True,
+        "value": 60
+    },
+    "berserker_brew": {
+        "id": "berserker_brew",
+        "name": "Berserker Brew",
+        "description": "A dangerous concoction that greatly increases attack at the cost of defense.",
+        "type": "consumable",
+        "effects": {"buff_attack": 6, "debuff_defense": -2, "duration": 4},
+        "combat_usable": True,
+        "value": 55
+    },
 
     # == Weapons ==
     "short_sword_iron": {

@@ -1,4 +1,83 @@
 # locations.py
+import random
+
+# --- Dynamic Weather System ---
+WEATHER_TYPES = {
+    "sunny": {
+        "name": "Clear Skies",
+        "description": "The sun shines brightly, warming the air.",
+        "visibility": 1.0,
+        "effects": {"perception_bonus": 5}
+    },
+    "foggy": {
+        "name": "Dense Fog",
+        "description": "A thick fog rolls in, limiting visibility.",
+        "visibility": 0.3,
+        "effects": {"perception_penalty": -10, "stealth_bonus": 15}
+    },
+    "stormy": {
+        "name": "Approaching Storm",
+        "description": "Dark clouds gather, thunder rumbles in the distance.",
+        "visibility": 0.7,
+        "effects": {"tension": True, "lightning_chance": 0.1}
+    },
+    "windy": {
+        "name": "Strong Winds",
+        "description": "Powerful gusts sweep across the landscape.",
+        "visibility": 0.8,
+        "effects": {"movement_difficulty": 5, "discovery_chance": 0.2}
+    },
+    "twilight": {
+        "name": "Twilight Hour",
+        "description": "The world is bathed in ethereal twilight.",
+        "visibility": 0.6,
+        "effects": {"magic_bonus": 10, "mystery": True}
+    }
+}
+
+# --- Environmental Storytelling Elements ---
+LORE_FRAGMENTS = {
+    "ancient_prophecy_1": {
+        "title": "Fragment of the Silent Symphony",
+        "text": "When shadows dance and silence sings, the symphony shall wake from ancient dreams...",
+        "discovery_context": "carved into weathered stone"
+    },
+    "traveler_journal_1": {
+        "title": "Torn Journal Page",
+        "text": "Day 12 - The dunes shift constantly. I swear I saw ruins beneath, but when I looked again...",
+        "discovery_context": "stuffed in a bottle"
+    },
+    "merchant_note": {
+        "title": "Merchant's Warning",
+        "text": "Beware the tide pools at midnight. Things that should not be sometimes are.",
+        "discovery_context": "scratched into driftwood"
+    }
+}
+
+# --- Non-Combat Encounters ---
+NPC_ENCOUNTERS = {
+    "mysterious_hermit": {
+        "name": "The Dune Hermit",
+        "description": "A weathered figure wrapped in tattered robes, eyes holding ancient wisdom.",
+        "dialogue_options": ["Ask about the area", "Trade supplies", "Request guidance"],
+        "can_trade": True,
+        "wisdom_chance": 0.7
+    },
+    "lost_merchant": {
+        "name": "Confused Merchant",
+        "description": "A portly trader who seems to have lost their way.",
+        "dialogue_options": ["Offer directions", "Ask about goods", "Listen to stories"],
+        "can_trade": True,
+        "reward_chance": 0.4
+    },
+    "spirit_echo": {
+        "name": "Echoing Spirit",
+        "description": "A translucent figure that flickers in and out of existence.",
+        "dialogue_options": ["Listen to its tale", "Ask about the past", "Offer peace"],
+        "can_trade": False,
+        "lore_chance": 0.9
+    }
+}
 
 # --- Encounter Group Definitions ---
 # Defines sets of enemies that can be encountered in various locations.
@@ -44,6 +123,7 @@ LOCATIONS = {
     "beach_starting": {
         "id": "beach_starting",
         "name": "Shifting Sands Beach",
+        "type": "coastal",  # Add type for enhanced exploration
         "description_first_visit_prompt": "The player has just arrived at the Shifting Sands Beach. Describe the scene atmospherically: the relentless sun, the sound of waves, scattered driftwood, perhaps the distant shimmer of dunes or dark rocks. Convey a sense of new beginnings and underlying mystery or potential danger.",
         "description_revisit_prompt": "The player returns to the Shifting Sands Beach. Briefly remind them of its key features, perhaps noting any subtle changes like the tide or new debris.",
         "defined_pois": [
@@ -96,28 +176,80 @@ LOCATIONS = {
     "coastal_dunes_edge": {
         "id": "coastal_dunes_edge",
         "name": "Edge of the Coastal Dunes",
+        "type": "desert",  # Add type for enhanced exploration
         "description_first_visit_prompt": "The player has reached the edge of vast coastal dunes. Describe the transition from beach to dunes: rolling hills of sand, sparse, tough vegetation, the sound of wind. Hint at the expanse beyond.",
         "description_revisit_prompt": "The player is back at the edge of the Coastal Dunes. Remind them of the sandy expanse and the path back to the beach.",
         "defined_pois": [
             {
-                "poi_id": "dunes_skull", 
+                "poi_id": "dunes_skull",
                 "display_text_for_player_choice": "A weathered animal skull half-buried in sand.",
                 "type": "simple_description",
                 "interaction_prompt_to_ai": "The player examines the weathered animal skull. Describe its appearance and any thoughts it might provoke."
+            },
+            {
+                "poi_id": "shifting_sand_puzzle",
+                "display_text_for_player_choice": "An unusual pattern in the sand that seems to shift with purpose.",
+                "type": "environmental_puzzle",
+                "puzzle_type": "sand_pattern",
+                "success_reward": "ancient_compass",
+                "interaction_prompt_to_ai": "The player studies the shifting sand patterns. They seem to form shapes when viewed from different angles."
+            },
+            {
+                "poi_id": "hidden_oasis_entrance",
+                "display_text_for_player_choice": "A shimmer in the air that might be more than heat haze.",
+                "type": "hidden_passage",
+                "requirements": {"perception": 15, "or_item": "ancient_compass"},
+                "leads_to": "hidden_desert_oasis",
+                "interaction_prompt_to_ai": "The player investigates the shimmering air. It seems to bend reality slightly."
+            },
+            {
+                "poi_id": "nomad_campfire_remains",
+                "display_text_for_player_choice": "The cold remains of a nomad's campfire, with objects scattered about.",
+                "type": "lore_discovery",
+                "lore_fragments": ["traveler_journal_1"],
+                "search_dc": 10,
+                "interaction_prompt_to_ai": "The player searches through the abandoned camp remains."
+            },
+            {
+                "poi_id": "wind_carved_stone",
+                "display_text_for_player_choice": "A tall stone carved by centuries of wind into strange shapes.",
+                "type": "meditation_spot",
+                "benefits": {"mana_restore": 5, "wisdom_insight": True},
+                "interaction_prompt_to_ai": "The player approaches the wind-carved stone. Its surface tells stories of ages past."
+            }
+        ],
+        "dynamic_events": [
+            {
+                "event_id": "sandstorm_approaching",
+                "trigger_chance": 0.15,
+                "weather_change": "stormy",
+                "description": "A wall of sand begins forming on the horizon."
+            },
+            {
+                "event_id": "hermit_encounter",
+                "trigger_chance": 0.1,
+                "npc_encounter": "mysterious_hermit",
+                "description": "A figure emerges from behind a dune, moving with purpose."
             }
         ],
         "encounter_groups": ["dunes_low_level", "beach_low_level"], # Can have some overlap
         "exits": {
             "south": "beach_starting",
-            "northwest": "dunes_hinterland" # Deeper into the dunes
+            "northwest": "dunes_hinterland", # Deeper into the dunes
+            "hidden_northeast": "hidden_desert_oasis" # Revealed by puzzle/high perception
         },
-        "items_common_find": ["flint_sharp", "bent_spoon"],
-        "properties": ["coastal_dunes", "sandy_terrain", "exposed", "windy"],
+        "items_common_find": ["flint_sharp", "bent_spoon", "sand_worn_coin"],
+        "resource_nodes": [
+            {"type": "mineral_vein", "resource": "sandstone", "skill_required": "mining", "respawn_time": 300},
+            {"type": "herb_patch", "resource": "desert_sage", "skill_required": "herbalism", "respawn_time": 180}
+        ],
+        "properties": ["coastal_dunes", "sandy_terrain", "exposed", "windy", "mystical_convergence"],
         "ambient_sounds_ai_prompt": "Describe the ambient sounds of the Coastal Dunes edge: wind whistling, distant surf, maybe the skittering of unseen creatures."
     },
     "rocky_shoreline_west": {
         "id": "rocky_shoreline_west",
         "name": "West Rocky Shoreline",
+        "type": "rocky",  # Add type for enhanced exploration
         "description_first_visit_prompt": "The player is on a rugged, rocky shoreline west of the main beach. Jagged black rocks meet the churning sea, and tide pools teem with small life. It feels more secluded and treacherous.",
         "description_revisit_prompt": "The player returns to the West Rocky Shoreline. Briefly mention the dark rocks and crashing waves.",
         "defined_pois": [
@@ -136,7 +268,84 @@ LOCATIONS = {
         },
         "items_common_find": ["broken_shell", "seaweed_clump", "crab_chitin_fragment"],
         "properties": ["coastal", "rocky_terrain", "tide_pools", "slippery"],
-        "ambient_sounds_ai_prompt": "Describe the ambient sounds of the Rocky Shoreline: crashing waves, seabird cries, water gurgling in crevices."
+        "ambient_sounds_ai_prompt": "Describe the ambient sounds of the Rocky Shoreline: crashing waves, seabird cries, water gurgling in crevices.",
+        "dynamic_events": [
+            {
+                "event_id": "mysterious_fog",
+                "trigger_chance": 0.2,
+                "weather_change": "foggy",
+                "description": "A thick fog rolls in from the sea, muffling all sounds."
+            }
+        ]
+    },
+    "hidden_desert_oasis": {
+        "id": "hidden_desert_oasis",
+        "name": "Hidden Desert Oasis",
+        "type": "oasis",
+        "hidden": True,  # Not shown until discovered
+        "description_first_visit_prompt": "The player discovers a hidden oasis - a miraculous pocket of life in the desert. Crystal-clear water springs from ancient stones, palm trees provide shade, and the air hums with mysterious energy. This place feels sacred and untouched by time.",
+        "description_revisit_prompt": "The hidden oasis remains a peaceful sanctuary, its waters still crystal clear and its atmosphere serene.",
+        "defined_pois": [
+            {
+                "poi_id": "oasis_spring",
+                "display_text_for_player_choice": "A crystal-clear spring bubbling from ancient stones.",
+                "type": "healing_spring",
+                "full_restore": True,
+                "blessing_chance": 0.3,
+                "interaction_prompt_to_ai": "The player approaches the miraculous spring. Its waters seem to glow with inner light."
+            },
+            {
+                "poi_id": "ancient_shrine",
+                "display_text_for_player_choice": "A small shrine covered in mysterious symbols.",
+                "type": "shrine",
+                "deity": "unknown",
+                "offerings_accepted": ["moonbloom_flower", "crystal_shard_mundane"],
+                "interaction_prompt_to_ai": "The player examines the ancient shrine. Its symbols seem to shift and change when not directly observed."
+            },
+            {
+                "poi_id": "wise_turtle",
+                "display_text_for_player_choice": "An ancient turtle resting by the water, its shell covered in moss.",
+                "type": "npc_creature",
+                "npc_id": "ancient_turtle_sage",
+                "peaceful": True,
+                "can_speak": True,
+                "interaction_prompt_to_ai": "The ancient turtle slowly opens one eye to regard the player. Wisdom seems to radiate from its ancient gaze."
+            }
+        ],
+        "encounter_groups": [], # Peaceful location
+        "exits": {
+            "southwest": "coastal_dunes_edge"
+        },
+        "items_common_find": ["moonbloom_flower", "crystal_water", "blessed_sand"],
+        "properties": ["sacred_ground", "no_combat", "restoration", "hidden_knowledge"],
+        "ambient_sounds_ai_prompt": "Describe the peaceful sounds of the hidden oasis: gentle water, soft breeze through palms, distant chimes."
     }
     # Add more locations as the game expands
-} 
+}
+
+# --- Environmental Interaction Definitions ---
+ENVIRONMENTAL_PUZZLES = {
+    "sand_pattern": {
+        "name": "Shifting Sand Puzzle",
+        "description": "The sand forms patterns that seem to respond to movement and observation.",
+        "solution_hints": ["The pattern changes with perspective", "Walking in circles reveals the truth", "The compass points to understanding"],
+        "skill_checks": [
+            {"skill": "intelligence", "dc": 12, "hint_revealed": 0},
+            {"skill": "wisdom", "dc": 15, "hint_revealed": 1},
+            {"skill": "perception", "dc": 10, "hint_revealed": 2}
+        ]
+    }
+}
+
+# --- Resource Gathering Definitions ---
+RESOURCE_NODES = {
+    "mineral_vein": {
+        "sandstone": {"yield": [1, 3], "tool_required": "pickaxe", "skill_xp": 5},
+        "iron_ore": {"yield": [1, 2], "tool_required": "pickaxe", "skill_xp": 10},
+        "crystal_formation": {"yield": [1, 1], "tool_required": "fine_tools", "skill_xp": 20}
+    },
+    "herb_patch": {
+        "desert_sage": {"yield": [2, 4], "tool_required": None, "skill_xp": 3},
+        "moonbloom_flower": {"yield": [1, 2], "tool_required": "herbalist_kit", "skill_xp": 8}
+    }
+}
