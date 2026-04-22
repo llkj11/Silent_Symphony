@@ -98,7 +98,7 @@ Biggest ROI tier. Data is already in `items.py` / `entities.py`; code just needs
 - [ ] `reveal_clue(clue_id, narrative)` — AI chooses which defined clue to surface based on context. (Blocked on a clue database; park until quests land in P3.)
 - [x] `offer_choice(setup_narrative, choices[])` — AI authors 2–3 options with pre-written outcomes; engine asks player to pick; prints the chosen outcome. Schema in `ai_function_declarations.py`; handler `_handle_offer_choice` in `main.py`; dispatched for both providers.
 - [x] `skill_check(difficulty, description, success_narrative, failure_narrative)` — AI commits both branches; engine rolls 1d10 vs difficulty (1–10). Handler `_handle_skill_check` in `main.py`.
-- [ ] `introduce_npc(npc_id, disposition, narrative)` — pending NPC data (P3).
+- [x] `introduce_npc(npc_id, disposition, narrative)` — declared in `ai_function_declarations.py`, dispatched on both providers via `_handle_introduce_npc`. Engine validates that the NPC exists AND currently lives at the player's location (hallucinated ids are refused), prints the narrative, logs a normal-significance event, and offers an interaction prompt that routes into `_interact_with_npc` if accepted. `ai_context._location_block` now lists NPCs-at-location so the AI only picks from valid ids.
 - [x] `set_world_flag(flag_name, scope, narrative)` — tool declared; handler `_handle_set_world_flag` routes to `world.set_flag` (global or per-location scope), prints the narrative, and logs the event as significant. Dispatched on both Gemini and OpenAI.
 
 ### Context-rich prompts
@@ -111,7 +111,7 @@ Biggest ROI tier. Data is already in `items.py` / `entities.py`; code just needs
 - [x] `add_flavor_poi` tool + `_maybe_generate_flavor_poi` helper. Gated by cost: 100% attempt when engine POIs exhausted, ~35% when 1–2 engine POIs already offered, skipped when 3+ are shown or no AI client is configured. AI can opt out via `narrative_outcome("none")`. Chosen ephemeral POI short-circuits Stage 3: prints `_preresolved_narrative`, skips AI re-narration and `world_state` marking. Verified: injected flavor POI appears as option 3, player selection prints pre-resolved text cleanly.
 
 ### Ambient color
-- [ ] Idle between-action ambient snippets (wind shifts, a seabird screams) when player stays in one location for multiple turns.
+- [x] Idle between-action ambient snippets. `locations.random_ambient_for(location_id)` draws from a per-location `ambient_snippets` list (hand-written for each of the 4 existing locations) and falls back to property-keyed pools (coastal, settlement, rocky_terrain, etc.). `main._maybe_show_ambient` fires before the action menu, ticking on the world turn counter with a 2-turn minimum gap and a 30% roll. Non-time-passing actions (inventory, stats, quest log) don't advance the gate.
 
 ---
 

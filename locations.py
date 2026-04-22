@@ -1,4 +1,56 @@
 # locations.py
+import random
+
+
+# Ambient snippet pools keyed by location property. Used as a fallback when a
+# location doesn't declare its own `ambient_snippets`. Keep lines short,
+# concrete, and worldless of system state — they fire as idle flavor.
+AMBIENT_BY_PROPERTY = {
+    "coastal": [
+        "A gull wheels overhead, shrieking once before peeling away.",
+        "The wind shifts; the tide hisses a little closer.",
+        "Salt spray drifts up on a sudden gust.",
+    ],
+    "sandy_terrain": [
+        "Sand skitters past your boots in thin, restless sheets.",
+        "Something small tunnels away under the surface and is gone.",
+    ],
+    "rocky_terrain": [
+        "Water gurgles somewhere deep in the rocks.",
+        "A crab sidles into a crevice with a papery clatter.",
+    ],
+    "coastal_dunes": [
+        "Marram grass rasps together in a slow chorus.",
+        "A thin ribbon of sand blows off a nearby ridge.",
+    ],
+    "settlement": [
+        "Low voices murmur from somewhere behind a canvas wall.",
+        "A pot clinks against a stone; someone laughs briefly.",
+    ],
+    "windy": [
+        "A gust picks up, tugging at your clothes, and falls away.",
+    ],
+    "tide_pools": [
+        "A tide pool ripples as something tiny flees the shadow of your head.",
+    ],
+}
+
+GENERIC_AMBIENT = [
+    "The moment stretches; nothing in particular happens, and that itself feels pointed.",
+    "Your own breathing is loud in the quiet.",
+]
+
+
+def random_ambient_for(location_id):
+    """Return a random ambient snippet for the location, or None if nothing fits."""
+    loc = LOCATIONS.get(location_id, {})
+    pool = list(loc.get("ambient_snippets") or [])
+    for prop in loc.get("properties", []):
+        pool.extend(AMBIENT_BY_PROPERTY.get(prop, []))
+    if not pool:
+        pool = list(GENERIC_AMBIENT)
+    return random.choice(pool) if pool else None
+
 
 # --- Encounter Group Definitions ---
 # Defines sets of enemies that can be encountered in various locations.
@@ -98,6 +150,11 @@ LOCATIONS = {
         "items_common_find": ["pebble_shiny", "seaweed_clump", "broken_shell"], # Items found generically
         "properties": ["coastal", "sandy_terrain", "open_area", "salt_air"],
         "weather_pool": ["clear", "overcast", "windy", "foggy", "stormy"],
+        "ambient_snippets": [
+            "A wave breaks long and low; foam races up the sand and thins into nothing.",
+            "Driftwood shifts further down the beach with a hollow knock.",
+            "For a moment you catch the distant shape of something large beneath the water, then it's gone.",
+        ],
         "ambient_sounds_ai_prompt": "Describe the ambient sounds of Shifting Sands Beach: waves, seabirds, wind."
     },
     "coastal_dunes_edge": {
@@ -122,6 +179,11 @@ LOCATIONS = {
         "items_common_find": ["flint_sharp", "bent_spoon"],
         "properties": ["coastal_dunes", "sandy_terrain", "exposed", "windy"],
         "weather_pool": ["clear", "windy", "overcast", "foggy"],
+        "ambient_snippets": [
+            "A plume of sand skates off the crest of a dune, smoking in the sun.",
+            "Far above, a hawk rides the wind without a single wingbeat.",
+            "You hear the whisper of sand settling somewhere you can't quite see.",
+        ],
         "ambient_sounds_ai_prompt": "Describe the ambient sounds of the Coastal Dunes edge: wind whistling, distant surf, maybe the skittering of unseen creatures."
     },
     "survivor_camp": {
@@ -150,6 +212,11 @@ LOCATIONS = {
         "items_common_find": [],
         "properties": ["safe_zone", "settlement", "coastal"],
         "safe": True,
+        "ambient_snippets": [
+            "Someone pokes the fire; embers spiral up and wink out.",
+            "A child laughs somewhere behind a driftwood wall, quickly hushed.",
+            "The flag snaps once in a gust, then goes slack again.",
+        ],
         "ambient_sounds_ai_prompt": "Low voices, the crackle of a small fire, gulls, the distant sea."
     },
     "rocky_shoreline_west": {
@@ -174,6 +241,11 @@ LOCATIONS = {
         "items_common_find": ["broken_shell", "seaweed_clump", "crab_chitin_fragment"],
         "properties": ["coastal", "rocky_terrain", "tide_pools", "slippery"],
         "weather_pool": ["clear", "overcast", "stormy", "windy", "foggy"],
+        "ambient_snippets": [
+            "A wave explodes against a rock just below, showering the air with spray.",
+            "An anemone in a tide pool slowly closes its fringed mouth.",
+            "Something long and silver glides beneath the surface and is lost in the dark.",
+        ],
         "ambient_sounds_ai_prompt": "Describe the ambient sounds of the Rocky Shoreline: crashing waves, seabird cries, water gurgling in crevices."
     }
     # Add more locations as the game expands

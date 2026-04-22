@@ -328,6 +328,32 @@ def _merchant_sell(player, npc):
     ai_context.log_event(player, f"Sold {data['name']} to {npc['name']} for {price}g.", significance="normal")
 
 
+def _handle_introduce_npc(player, location_id, npc_id, disposition, narrative):
+    """AI-foregrounded NPC entry. Requires the NPC to already live at this location.
+    Prints the narrative, logs the moment, and offers interaction."""
+    npc = npcs.get(npc_id) if npc_id else None
+    if not npc or npc.get("location") != location_id:
+        # AI hallucinated an NPC or called them in the wrong place — refuse quietly.
+        if config.DEBUG_MODE:
+            print(f"DEBUG: introduce_npc refused for id={npc_id} at location={location_id}")
+        if narrative:
+            # Still show the narrative — it's just flavor at that point.
+            print(f"\n{narrative}")
+        return
+    if narrative:
+        print(f"\n{narrative}")
+    mood = f" ({disposition})" if disposition else ""
+    ai_context.log_event(
+        player,
+        f"{npc['name']} stepped into the scene{mood} at {location_id}.",
+        significance="normal",
+    )
+    prompt = f"Engage with {npc['name']}?"
+    chosen = ui.get_numbered_choice(prompt, ["Yes", "Not now"])
+    if chosen == "Yes":
+        _interact_with_npc(player, npc_id)
+
+
 def _handle_set_world_flag(player, location_id, flag_name, scope, narrative):
     """AI-initiated persistent flag. Engine records, prints the narrative, logs as significant."""
     if not flag_name:
@@ -409,6 +435,34 @@ def _maybe_generate_flavor_poi(player, location_id, existing_pois):
     )
     resp = ai_utils.get_ai_model_response(_prompt_with_context(player, location_id, prompt))
     return _parse_flavor_poi(resp)
+
+
+AMBIENT_MIN_GAP = 2     # turns since last ambient before it may fire again
+AMBIENT_CHANCE = 0.30
+
+
+def _maybe_show_ambient(player, location_id):
+    """Occasional idle-flavor snippet when the player lingers in one place.
+
+    Ticks off the world turn counter (advanced only by time-passing actions —
+    explore / move / rest) so non-time actions like 'View Stats' don't count
+    toward the dwell gate. Resets on location change.
+    """
+    turn_now = world.turn_counter(player)
+    tracker = player.setdefault("_ambient", {"loc": None, "last_fire_turn": -99})
+    if tracker.get("loc") != location_id:
+        tracker["loc"] = location_id
+        tracker["last_fire_turn"] = turn_now
+        return
+    if turn_now - tracker.get("last_fire_turn", -99) < AMBIENT_MIN_GAP:
+        return
+    if random.random() >= AMBIENT_CHANCE:
+        return
+    snippet = locations.random_ambient_for(location_id)
+    if not snippet:
+        return
+    print(f"\n{snippet}")
+    tracker["last_fire_turn"] = turn_now
 
 
 def _log_combat_result(player, enemy_name, result):
@@ -573,9 +627,11 @@ def game():
     while not game_over:
         current_location_id = player['location']
         current_location_data = locations.LOCATIONS.get(current_location_id)
-        if not current_location_data: 
+        if not current_location_data:
             print(f"ERROR: Location '{current_location_id}' is invalid! Resetting to start.")
-            player['location'] = "beach_starting"; player['last_described_location'] = None; continue 
+            player['location'] = "beach_starting"; player['last_described_location'] = None; continue
+
+        _maybe_show_ambient(player, current_location_id)
 
         print(f"\n--- Current Location: {current_location_data.get('name', current_location_id)} ---")
         print("\nWhat would you like to do?")
@@ -753,8 +809,9 @@ def game():
                         f"{ai_narrative_context} Describe this scene or outcome. Call ONE of: "
                         "'narrative_outcome' (pure description); "
                         "'offer_choice' (2–3 options with pre-authored outcomes, only if a meaningful branch naturally fits); "
-                        "'skill_check' (difficulty + success/failure narratives, only if the result hinges on luck or skill). "
-                        "Prefer narrative_outcome unless branching or chance clearly improves the moment."
+                        "'skill_check' (difficulty + success/failure narratives, only if the result hinges on luck or skill); "
+                        "'introduce_npc' (only if an NPC listed in the location's 'NPCs here' context would naturally step into this moment). "
+                        "Prefer narrative_outcome unless branching, chance, or an NPC entrance clearly improves the moment."
                     )
 
                 if chosen_poi_display_text != "Ignore these and look around generally":
@@ -840,6 +897,16 @@ def game():
                                         )
                                         function_called_successfully = True; break
 
+                                    elif function_call.name == "introduce_npc":
+                                        a = function_call.args
+                                        _handle_introduce_npc(
+                                            player, current_location_id,
+                                            a.get('npc_id'),
+                                            a.get('disposition', ''),
+                                            a.get('narrative', ''),
+                                        )
+                                        function_called_successfully = True; break
+
                                     else: print("\nA strange feeling washes over you..."); function_called_successfully = True; break
                     # --- OPENAI PATH ---
                     elif config.AI_PROVIDER == "OPENAI":
@@ -902,6 +969,15 @@ def game():
                                         player, current_location_id,
                                         args.get('flag_name'),
                                         args.get('scope', 'global'),
+                                        args.get('narrative', ''),
+                                    )
+                                    function_called_successfully = True; break
+
+                                elif function_name == "introduce_npc":
+                                    _handle_introduce_npc(
+                                        player, current_location_id,
+                                        args.get('npc_id'),
+                                        args.get('disposition', ''),
                                         args.get('narrative', ''),
                                     )
                                     function_called_successfully = True; break

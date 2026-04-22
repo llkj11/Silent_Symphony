@@ -7,6 +7,7 @@ compact briefing that the AI sees before every task prompt.
 
 import character
 import world
+import npcs
 
 
 EVENT_HISTORY_CAP = 20
@@ -153,6 +154,10 @@ def _location_block(player, location_id, locations_db):
     global_flags = world.ensure(player).get("flags") or {}
     if global_flags:
         lines.append(f"- Global flags: {', '.join(k for k, v in global_flags.items() if v)}")
+    present_npcs = npcs.npcs_at(location_id)
+    if present_npcs:
+        labels = [f"{n['id']} ({n.get('name','?')}, {n.get('role','?')})" for n in present_npcs]
+        lines.append(f"- NPCs here: {', '.join(labels)}")
     return "\n".join(lines)
 
 

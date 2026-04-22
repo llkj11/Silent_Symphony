@@ -53,6 +53,7 @@ if genai or OpenAIClient: # Check if any SDK is available to justify loading dec
             SKILL_CHECK_DECLARATION,
             SET_WORLD_FLAG_DECLARATION,
             ADD_FLAVOR_POI_DECLARATION,
+            INTRODUCE_NPC_DECLARATION,
         )
         RAW_FUNCTION_DECLARATIONS = [
             LIST_POINTS_OF_INTEREST_DECLARATION,
@@ -63,6 +64,7 @@ if genai or OpenAIClient: # Check if any SDK is available to justify loading dec
             SKILL_CHECK_DECLARATION,
             SET_WORLD_FLAG_DECLARATION,
             ADD_FLAVOR_POI_DECLARATION,
+            INTRODUCE_NPC_DECLARATION,
         ]
     except ImportError as e:
         print(f"Could not import AI function declarations: {e}. Function calling will be disabled.")

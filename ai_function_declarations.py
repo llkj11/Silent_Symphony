@@ -137,6 +137,34 @@ ADD_FLAVOR_POI_DECLARATION = {
     }
 }
 
+INTRODUCE_NPC_DECLARATION = {
+    "name": "introduce_npc",
+    "description": (
+        "Foreground an existing NPC in the scene — for example, when an NPC approaches the player, calls out, "
+        "or otherwise makes themselves part of the current moment. The NPC must already be present at the current "
+        "location (the engine will refuse unknown or off-site IDs). After narrating, the engine offers the player "
+        "the chance to interact with them. Use this to make NPCs feel proactive; do not use to invent new people."
+    ),
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {
+            "npc_id": {
+                "type": "STRING",
+                "description": "Database ID of the NPC to foreground (e.g., 'morwyn_trader'). Must already be at the player's current location."
+            },
+            "disposition": {
+                "type": "STRING",
+                "description": "A short mood/attitude cue for this specific encounter (e.g., 'guarded', 'eager', 'tired'). Does not overwrite the NPC's baseline disposition."
+            },
+            "narrative": {
+                "type": "STRING",
+                "description": "1–3 sentences describing how the NPC enters this moment (e.g., 'Morwyn looks up from her bundles as you approach, wiping her hands on a salt-stained rag.')."
+            }
+        },
+        "required": ["npc_id", "narrative"]
+    }
+}
+
 SKILL_CHECK_DECLARATION = {
     "name": "skill_check",
     "description": "Call when the outcome of the player's action hinges on luck or skill. Provide a difficulty (1–10; 5 is moderate, 8 is hard) and BOTH narratives up-front. The engine will roll and print only the matching one. Prefer this over 'narrative_outcome' when the result could plausibly go either way.",
