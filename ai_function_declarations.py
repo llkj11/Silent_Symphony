@@ -68,4 +68,98 @@ NARRATIVE_OUTCOME_DECLARATION = {
     }
 }
 
-# We can add more declarations here later, e.g., for NPC interactions, puzzle updates, etc. 
+OFFER_CHOICE_DECLARATION = {
+    "name": "offer_choice",
+    "description": "Call when the player's action naturally leads to a branching micro-decision (e.g., 'Do you reach into the dark crevice, tap it with your spear, or back away?'). Present 2–3 concise options with pre-authored outcome narratives. The engine will ask the player to pick one and print only the chosen option's outcome. Use this to make scenes feel reactive instead of one-shot.",
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {
+            "setup_narrative": {
+                "type": "STRING",
+                "description": "One or two sentences framing the choice for the player. No questions — just the situation."
+            },
+            "choices": {
+                "type": "ARRAY",
+                "description": "2 to 3 options. Each label is short; each outcome_narrative is 1–2 sentences describing what happens if that option is taken.",
+                "items": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "label": {"type": "STRING", "description": "Short imperative label the player will pick from (e.g., 'Reach in carefully')."},
+                        "outcome_narrative": {"type": "STRING", "description": "What happens when the player picks this option."}
+                    },
+                    "required": ["label", "outcome_narrative"]
+                }
+            }
+        },
+        "required": ["setup_narrative", "choices"]
+    }
+}
+
+SET_WORLD_FLAG_DECLARATION = {
+    "name": "set_world_flag",
+    "description": "Record a narrative flag that should persist across future scenes (e.g., 'heard_rumor_of_captain', 'disturbed_shoreline_shrine'). Use sparingly — only for state that will matter later. Do NOT use for transient moods or one-off observations.",
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {
+            "flag_name": {
+                "type": "STRING",
+                "description": "A snake_case identifier. Prefix with 'ai_' if unsure about namespacing."
+            },
+            "scope": {
+                "type": "STRING",
+                "description": "'global' (default) or 'location' (attached to the current location)."
+            },
+            "narrative": {
+                "type": "STRING",
+                "description": "1–2 sentences describing what happened. Will be printed to the player."
+            }
+        },
+        "required": ["flag_name", "narrative"]
+    }
+}
+
+ADD_FLAVOR_POI_DECLARATION = {
+    "name": "add_flavor_poi",
+    "description": "Optionally contribute ONE ephemeral observation the player might investigate right now, alongside the game-defined points of interest. Make it small, specific, and grounded in the scene. This POI is purely narrative — no items, enemies, or state changes. If nothing fits the moment, call 'narrative_outcome' with text 'none' instead.",
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {
+            "display_text": {
+                "type": "STRING",
+                "description": "One short sentence the player will see in the list of things to investigate (e.g., 'A line of ants marches into a crack between two boulders.')."
+            },
+            "outcome_narrative": {
+                "type": "STRING",
+                "description": "1–3 sentences for what happens when the player investigates it. Pure description or flavor only."
+            }
+        },
+        "required": ["display_text", "outcome_narrative"]
+    }
+}
+
+SKILL_CHECK_DECLARATION = {
+    "name": "skill_check",
+    "description": "Call when the outcome of the player's action hinges on luck or skill. Provide a difficulty (1–10; 5 is moderate, 8 is hard) and BOTH narratives up-front. The engine will roll and print only the matching one. Prefer this over 'narrative_outcome' when the result could plausibly go either way.",
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {
+            "difficulty": {
+                "type": "INTEGER",
+                "description": "Target 1–10. Engine rolls 1d10 and succeeds on >= difficulty."
+            },
+            "description": {
+                "type": "STRING",
+                "description": "Short description of what the player is attempting (e.g., 'pry the warped lid', 'leap across the gap')."
+            },
+            "success_narrative": {
+                "type": "STRING",
+                "description": "Narrative printed on success."
+            },
+            "failure_narrative": {
+                "type": "STRING",
+                "description": "Narrative printed on failure. Avoid killing the player; minor setbacks are fine."
+            }
+        },
+        "required": ["difficulty", "description", "success_narrative", "failure_narrative"]
+    }
+}

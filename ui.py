@@ -1,5 +1,7 @@
 import curses # Import the curses library
 import textwrap
+import effects as _effects_module
+import character as _character_module
 
 # Helper function for presenting numbered choices and getting valid input
 def get_numbered_choice(prompt_text, options_list):
@@ -77,6 +79,35 @@ def display_curses_menu(stdscr, title, options_list):
             return None # Or a specific value like "[BACK]" if defined in options 
 
 # New 3-Pane Curses Inventory UI
+def _display_readable_modal(stdscr, title, content):
+    """Full-screen modal showing the readable content of a book/note/scroll."""
+    curses.curs_set(0)
+    stdscr.nodelay(0)
+    stdscr.timeout(-1)
+    while True:
+        stdscr.clear()
+        max_rows, max_cols = stdscr.getmaxyx()
+        wrap_width = max(20, max_cols - 4)
+        header = title
+        footer = "[Any key to close]"
+        stdscr.addstr(1, max(1, (max_cols - len(header)) // 2), header, curses.A_BOLD)
+        stdscr.addstr(2, 1, "-" * (max_cols - 2))
+        y = 4
+        for paragraph in str(content).split("\n"):
+            wrapped = textwrap.wrap(paragraph, wrap_width) if paragraph.strip() else [""]
+            for line in wrapped:
+                if y >= max_rows - 3:
+                    break
+                stdscr.addstr(y, 2, line)
+                y += 1
+            if y >= max_rows - 3:
+                break
+        stdscr.addstr(max_rows - 2, max(1, (max_cols - len(footer)) // 2), footer, curses.A_DIM)
+        stdscr.refresh()
+        stdscr.getch()
+        return
+
+
 def display_curses_inventory(stdscr, player, items_module, config_module):
     curses.curs_set(0)
     stdscr.nodelay(0)
@@ -116,8 +147,20 @@ def display_curses_inventory(stdscr, player, items_module, config_module):
 
         cat_pane_width = int(max_cols * cat_pane_w_pct)
         item_pane_width = int(max_cols * item_pane_w_pct)
-        info_pane_start_x = cat_pane_width + item_pane_width + 2 
+        info_pane_start_x = cat_pane_width + item_pane_width + 2
         info_pane_width = max_cols - info_pane_start_x -1
+
+        # --- 0. Draw Player Status Line (Top) ---
+        status_line = (
+            f"HP {player.get('health',0)}/{player.get('max_health',0)}  "
+            f"Mana {player.get('mana',0)}/{player.get('max_mana',0)}  "
+            f"Stamina {player.get('stamina',0)}/{player.get('max_stamina',0)}  "
+            f"Gold {player.get('gold',0)}"
+        )
+        effects_summary = _effects_module.active_effects_summary(player)
+        if effects_summary:
+            status_line += f"  [{effects_summary}]"
+        stdscr.addstr(0, 1, status_line[: max_cols - 2], curses.color_pair(3))
 
         # --- 1. Draw Category Pane (Left) ---
         stdscr.attron(curses.color_pair(4) | curses.A_BOLD)
@@ -152,9 +195,15 @@ def display_curses_inventory(stdscr, player, items_module, config_module):
                 item_data = items_module.ITEM_DB.get(item_id, {})
                 item_name = item_data.get("name", "Unknown")
                 marker = ""
-                if player.get('equipped_weapon') == item_id: marker = " (W)"
-                elif player.get('equipped_armor') == item_id: marker = " (A)"
-                elif player.get('equipped_shield') == item_id: marker = " (S)" # Shield marker
+                if player.get('equipped_weapon') == item_id:
+                    marker = " (W)"
+                elif player.get('equipped_shield') == item_id:
+                    marker = " (S)"
+                else:
+                    for _slot_field in _character_module.ARMOR_SLOT_FIELDS.values():
+                        if player.get(_slot_field) == item_id:
+                            marker = " (A)"
+                            break
                 display_name = f"{item_name}{marker}"[:item_pane_width-2]
                 style = curses.color_pair(1) if i == current_item_idx and active_pane == "items" else curses.color_pair(2)
                 stdscr.addstr(3 + i, cat_pane_width + 1, display_name.ljust(item_pane_width -2), style)
@@ -199,11 +248,14 @@ def display_curses_inventory(stdscr, player, items_module, config_module):
         hints_y = max_rows - 2
         hints = "[ESC] Exit | [Arrows] Navigate Panes/Items"
         if active_pane == "items" and highlighted_item_id_from_list:
-            item_type = items_module.ITEM_DB.get(highlighted_item_id_from_list, {}).get('type')
-            if item_type == 'consumable' or item_type == 'scroll': 
+            item_data = items_module.ITEM_DB.get(highlighted_item_id_from_list, {})
+            item_type = item_data.get('type')
+            if item_type == 'consumable' or item_type == 'scroll':
                 hints += " | [U] Use"
-            elif item_type in ['weapon', 'armor', 'shield']: 
+            elif item_type in ['weapon', 'armor', 'shield']:
                 hints += " | [E] Equip/Unequip"
+            if item_data.get('readable_content'):
+                hints += " | [R] Read"
         stdscr.addstr(hints_y, 1, hints.ljust(max_cols -2))
 
         stdscr.refresh()
@@ -235,44 +287,41 @@ def display_curses_inventory(stdscr, player, items_module, config_module):
             elif (key == ord('u') or key == ord('U')) and highlighted_item_id_from_list:
                 item_data = items_module.ITEM_DB.get(highlighted_item_id_from_list)
                 item_type = item_data.get('type')
-                if item_type == 'consumable' or item_type == 'scroll':
-                    # Basic use logic for consumables and scrolls
-                    # For scrolls, actual spell casting logic would be more complex
-                    # For now, just acknowledge use and remove if it's a one-time use item
-                    action_performed_message = f"Used {item_data['name']}."
-                    if item_data.get('effect',{}).get('heal'): # Example: simple heal effect
-                         player['health'] = min(player['max_health'], player['health'] + item_data['effect']['heal'])
-                         action_performed_message += f" Healed {item_data['effect']['heal']} HP."
-                    
-                    # Assume scrolls are consumed on use for now
-                    if item_type == 'scroll' or item_data.get("type") == "consumable": 
+                if item_type in ('consumable', 'scroll'):
+                    res = _effects_module.apply_item_effect(player, highlighted_item_id_from_list, in_combat=False)
+                    action_performed_message = " / ".join(res['narrative']) if res['narrative'] else f"Used {item_data['name']}."
+                    if res['consumed']:
                         player['inventory'].remove(highlighted_item_id_from_list)
-                        current_item_idx = max(0, current_item_idx -1) if len(filtered_inventory_ids) == 1 else current_item_idx
-                        if not player['inventory']: active_pane = "categories"
-                else: action_performed_message = "Cannot use this item type."
+                        if len(filtered_inventory_ids) == 1:
+                            current_item_idx = max(0, current_item_idx - 1)
+                        if not player['inventory']:
+                            active_pane = "categories"
+                else:
+                    action_performed_message = "Cannot use this item type."
+            elif (key == ord('r') or key == ord('R')) and highlighted_item_id_from_list:
+                item_data = items_module.ITEM_DB.get(highlighted_item_id_from_list)
+                content = item_data.get('readable_content') if item_data else None
+                if content:
+                    _display_readable_modal(stdscr, item_data.get('name', 'Unknown'), content)
+                else:
+                    action_performed_message = "Nothing to read here."
             elif (key == ord('e') or key == ord('E')) and highlighted_item_id_from_list:
                 item_data = items_module.ITEM_DB.get(highlighted_item_id_from_list)
-                item_type = item_data.get('type')
+                slot_field = _character_module.slot_for_item(item_data)
                 equip_message_parts = []
-                if item_type == 'weapon':
-                    if player['equipped_weapon'] == highlighted_item_id_from_list: 
-                        player['equipped_weapon'] = None; equip_message_parts.append(f"Unequipped {item_data['name']}.")
-                    else: 
-                        if player['equipped_weapon']: equip_message_parts.append(f"Unequipped {items_module.ITEM_DB[player['equipped_weapon']]['name']}.")
-                        player['equipped_weapon'] = highlighted_item_id_from_list; equip_message_parts.append(f"Equipped {item_data['name']}.")
-                elif item_type == 'armor':
-                    if player['equipped_armor'] == highlighted_item_id_from_list: 
-                        player['equipped_armor'] = None; equip_message_parts.append(f"Unequipped {item_data['name']}.")
-                    else: 
-                        if player['equipped_armor']: equip_message_parts.append(f"Unequipped {items_module.ITEM_DB[player['equipped_armor']]['name']}.")
-                        player['equipped_armor'] = highlighted_item_id_from_list; equip_message_parts.append(f"Equipped {item_data['name']}.")
-                elif item_type == 'shield':
-                    if player['equipped_shield'] == highlighted_item_id_from_list: 
-                        player['equipped_shield'] = None; equip_message_parts.append(f"Unequipped {item_data['name']}.")
-                    else: 
-                        if player['equipped_shield']: equip_message_parts.append(f"Unequipped {items_module.ITEM_DB[player['equipped_shield']]['name']}.")
-                        player['equipped_shield'] = highlighted_item_id_from_list; equip_message_parts.append(f"Equipped {item_data['name']}.")
-                else: equip_message_parts.append("Cannot equip this item type.")
+                if not slot_field:
+                    equip_message_parts.append("Cannot equip this item type.")
+                else:
+                    currently_in_slot = player.get(slot_field)
+                    if currently_in_slot == highlighted_item_id_from_list:
+                        player[slot_field] = None
+                        equip_message_parts.append(f"Unequipped {item_data['name']}.")
+                    else:
+                        if currently_in_slot:
+                            prev_name = items_module.ITEM_DB.get(currently_in_slot, {}).get('name', currently_in_slot)
+                            equip_message_parts.append(f"Unequipped {prev_name}.")
+                        player[slot_field] = highlighted_item_id_from_list
+                        equip_message_parts.append(f"Equipped {item_data['name']}.")
                 action_performed_message = " ".join(equip_message_parts)
 
         if action_performed_message:

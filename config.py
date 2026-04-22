@@ -5,9 +5,8 @@ import copy # For deep copying schemas before modification
 load_dotenv() # Load variables from .env file into environment
 
 # --- AI Provider Configuration ---
-# Set this to "GEMINI" or "OPENAI" to choose the AI provider
-AI_PROVIDER = "OPENAI" # For testing OpenAI path now
-# Or load from .env: AI_PROVIDER = os.getenv("AI_PROVIDER", "GEMINI").upper()
+# Set AI_PROVIDER=GEMINI or AI_PROVIDER=OPENAI in your .env (defaults to OPENAI).
+AI_PROVIDER = os.getenv("AI_PROVIDER", "OPENAI").upper()
 
 # --- Gemini Configuration (if used) ---
 try:
@@ -27,41 +26,19 @@ except ImportError:
     print("OpenAI SDK not installed. OpenAI provider will be unavailable.")
     OpenAIClient = None # So we can check for its existence
 
-# Import our function declarations
-GAME_EVENT_TOOLS = None
-TOOL_CONFIG = None
-if genai and gemini_types: # Check if SDK and types loaded
-    try:
-        from ai_function_declarations import (
-            LIST_POINTS_OF_INTEREST_DECLARATION,
-            PLAYER_DISCOVERS_ITEM_DECLARATION,
-            PLAYER_ENCOUNTERS_ENEMY_DECLARATION,
-            NARRATIVE_OUTCOME_DECLARATION
-        )
-        GAME_EVENT_TOOLS = gemini_types.Tool(function_declarations=[
-            LIST_POINTS_OF_INTEREST_DECLARATION,
-            PLAYER_DISCOVERS_ITEM_DECLARATION,
-            PLAYER_ENCOUNTERS_ENEMY_DECLARATION,
-            NARRATIVE_OUTCOME_DECLARATION
-        ])
-        TOOL_CONFIG = gemini_types.ToolConfig(function_calling_config=gemini_types.FunctionCallingConfig(mode="ANY"))
-    except ImportError as e:
-        print(f"Could not import AI function declarations: {e}. Function calling will be disabled.")
-    except AttributeError as e:
-        print(f"AttributeError while setting up tools (likely SDK version issue with types.Tool or ToolConfig): {e}. Function calling may be affected.")
-        GAME_EVENT_TOOLS = None
-        TOOL_CONFIG = None
-
 # --- Configuration ---
-DEBUG_MODE = True # Set to True to enable debug prints for AI calls
+DEBUG_MODE = os.getenv("DEBUG_MODE", "False").lower() in ("1", "true", "yes")
 
 # API_KEY is now loaded from .env
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY") 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # --- Model Names --- (Provider-specific)
-GEMINI_MODEL_NAME = "gemini-1.5-flash-latest" # Changed to 1.5 for better function calling
-OPENAI_MODEL_NAME = "gpt-4.1" # Target model, can be changed to gpt-4o or gpt-4-turbo if needed
+# Env-overridable model IDs. Defaults are chosen for the current generation of
+# cheap-yet-capable function-calling-ready models (~2026-Q2). Bump as needed;
+# stale defaults will still work but cost more per call or lag on quality.
+GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3-flash")
+OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL", "gpt-5.4-mini")
 
 # --- Load Raw Function Declarations ---
 RAW_FUNCTION_DECLARATIONS = []
@@ -71,13 +48,21 @@ if genai or OpenAIClient: # Check if any SDK is available to justify loading dec
             LIST_POINTS_OF_INTEREST_DECLARATION,
             PLAYER_DISCOVERS_ITEM_DECLARATION,
             PLAYER_ENCOUNTERS_ENEMY_DECLARATION,
-            NARRATIVE_OUTCOME_DECLARATION
+            NARRATIVE_OUTCOME_DECLARATION,
+            OFFER_CHOICE_DECLARATION,
+            SKILL_CHECK_DECLARATION,
+            SET_WORLD_FLAG_DECLARATION,
+            ADD_FLAVOR_POI_DECLARATION,
         )
         RAW_FUNCTION_DECLARATIONS = [
             LIST_POINTS_OF_INTEREST_DECLARATION,
             PLAYER_DISCOVERS_ITEM_DECLARATION,
             PLAYER_ENCOUNTERS_ENEMY_DECLARATION,
-            NARRATIVE_OUTCOME_DECLARATION
+            NARRATIVE_OUTCOME_DECLARATION,
+            OFFER_CHOICE_DECLARATION,
+            SKILL_CHECK_DECLARATION,
+            SET_WORLD_FLAG_DECLARATION,
+            ADD_FLAVOR_POI_DECLARATION,
         ]
     except ImportError as e:
         print(f"Could not import AI function declarations: {e}. Function calling will be disabled.")
@@ -105,7 +90,6 @@ def _convert_schema_types_to_lowercase(schema_part):
         return schema_part
 
 # --- Global AI Client and Provider-Specific Tool/Config Variables ---
-DEBUG_MODE = True 
 global_ai_client = None
 # For Gemini
 gemini_generation_config = None 
@@ -116,7 +100,11 @@ openai_tools_list = None # This will be the list of formatted tool dicts for Ope
 if AI_PROVIDER == "GEMINI":
     if genai and gemini_types and GEMINI_API_KEY and GEMINI_API_KEY != 'YOUR_API_KEY':
         try:
-            global_ai_client = genai.GenerativeModel(model_name=GEMINI_MODEL_NAME)
+            from ai_context import SYSTEM_INSTRUCTION as _SYS
+            global_ai_client = genai.GenerativeModel(
+                model_name=GEMINI_MODEL_NAME,
+                system_instruction=_SYS,
+            )
             
             gemini_sdk_tools = None
             gemini_tool_config = None

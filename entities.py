@@ -33,7 +33,8 @@ ENEMY_TEMPLATES = {
         "health": 15,
         "attack_min": 2,
         "attack_max": 5,
-        "loot_groups": ["goblin_common_junk", "goblin_weaponry_crude"], 
+        "gold_drop": [1, 4],
+        "loot_groups": ["goblin_common_junk", "goblin_weaponry_crude"],
         "unique_loot": [
             {"item_id": "spear_common", "chance": 0.25} # higher chance for spear for scout
         ],
@@ -46,7 +47,8 @@ ENEMY_TEMPLATES = {
         "health": 25,
         "attack_min": 3,
         "attack_max": 7,
-        "loot_groups": ["animal_parts_common"], 
+        "special_attacks": [{"id": "slam_stun", "chance": 0.25}],
+        "loot_groups": ["animal_parts_common"],
         "unique_loot": [
             {"item_id": "broken_shell", "chance": 0.9},
             {"item_id": "seaweed_clump", "chance": 0.6},
@@ -79,6 +81,8 @@ ENEMY_TEMPLATES = {
         "health": 18,
         "attack_min": 2,
         "attack_max": 5,
+        "gold_drop": [3, 8],
+        "special_attacks": [{"id": "precise_shot", "chance": 0.3}],
         "loot_groups": ["bandit_gear_basic"],
         "unique_loot": [
             {"item_id": "hunting_bow_simple", "chance": 0.6},
@@ -799,6 +803,7 @@ ENEMY_TEMPLATES = {
         "health": 15,
         "attack_min": 2,
         "attack_max": 4,
+        "special_attacks": [{"id": "poison_bite", "chance": 0.4}],
         "loot_table": [
             {"item_id": "antidote_simple", "chance": 0.3},
             {"item_id": "obsidian_shard", "chance": 0.1}
@@ -812,8 +817,9 @@ ENEMY_TEMPLATES = {
         "health": 30,
         "attack_min": 4,
         "attack_max": 7,
+        "special_attacks": [{"id": "poison_bite", "chance": 0.35}],
         "loot_table": [
-            {"item_id": "crab_chitin_fragment", "chance": 0.5}, 
+            {"item_id": "crab_chitin_fragment", "chance": 0.5},
             {"item_id": "brimstone_dust", "chance": 0.2},
             {"item_id": "antidote_simple", "chance": 0.1}
         ],
@@ -872,6 +878,7 @@ ENEMY_TEMPLATES = {
         "health": 35,
         "attack_min": 5,
         "attack_max": 8,
+        "special_attacks": [{"id": "slam_stun", "chance": 0.3}],
         "loot_table": [
             {"item_id": "crab_chitin_fragment", "chance": 0.8},
             {"item_id": "pearl_small", "chance": 0.1},
@@ -886,6 +893,7 @@ ENEMY_TEMPLATES = {
         "health": 45,
         "attack_min": 6,
         "attack_max": 9,
+        "special_attacks": [{"id": "rending_claw", "chance": 0.3}],
         "loot_table": [
             {"item_id": "fish_bones", "chance": 0.6},
             {"item_id": "naiad_scale_shimmering", "chance": 0.15},

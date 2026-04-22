@@ -706,6 +706,13 @@ ITEM_DB = {
         "type": "quest_item",
         "value": 0
     },
+    "captain_log_waterlogged": {
+        "id": "captain_log_waterlogged",
+        "name": "Waterlogged Captain's Log",
+        "description": "A leather-bound journal, pages bloated with seawater. Entries describe a storm, a reef, and the order to abandon ship.",
+        "type": "quest_item",
+        "value": 0
+    },
 
     # == Books & Notes (Readable for lore/hints, some might give XP or skill) ==
     "journal_page_ripped": {

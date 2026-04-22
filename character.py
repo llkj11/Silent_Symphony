@@ -1,6 +1,62 @@
 import random
 import game_data
 import ui
+import abilities
+
+
+ARMOR_SLOTS = ['head', 'chest', 'legs', 'hands', 'feet']
+ARMOR_SLOT_FIELDS = {slot: f'equipped_{slot}' for slot in ARMOR_SLOTS}
+
+
+def armor_defense_total(player, item_db):
+    """Sum defense_bonus across all equipped armor slots + shield.
+
+    Dwarven `armor_mastery` grants +1 defense per equipped armor piece.
+    """
+    total = 0
+    armor_pieces = 0
+    for field in ARMOR_SLOT_FIELDS.values():
+        iid = player.get(field)
+        if iid and iid in item_db:
+            data = item_db[iid]
+            if data.get('type') == 'armor':
+                total += data.get('defense_bonus', 0)
+                armor_pieces += 1
+    shield_id = player.get('equipped_shield')
+    if shield_id and shield_id in item_db:
+        sdata = item_db[shield_id]
+        if sdata.get('type') == 'shield':
+            total += sdata.get('defense_bonus', 0)
+    if player.get('race_trait') == 'armor_mastery':
+        total += armor_pieces
+    return total
+
+
+def magic_resistance_total(player, item_db):
+    """Sum magic_resistance from equipped armor + shield (from their `effect` dict)."""
+    total = 0
+    for field in list(ARMOR_SLOT_FIELDS.values()) + ['equipped_shield']:
+        iid = player.get(field)
+        if iid and iid in item_db:
+            effect = item_db[iid].get('effect', {}) or {}
+            total += effect.get('magic_resistance', 0)
+    return total
+
+
+def slot_for_item(item_data):
+    """Return which player field an equippable item slots into, or None."""
+    if not item_data:
+        return None
+    item_type = item_data.get('type')
+    if item_type == 'weapon':
+        return 'equipped_weapon'
+    if item_type == 'shield':
+        return 'equipped_shield'
+    if item_type == 'armor':
+        slot = item_data.get('slot')
+        if slot in ARMOR_SLOTS:
+            return f'equipped_{slot}'
+    return None
 
 # --- Leveling Configuration ---
 BASE_XP_TO_NEXT_LEVEL = 50
@@ -17,7 +73,7 @@ def check_for_level_up(player_character):
         player_character['xp'] -= player_character['xp_to_next_level'] 
         
         # Update xp_to_next_level (example: simple scaling)
-        player_character['xp_to_next_level'] = int(BASE_XP_TO_NEXT_LEVEL * (XP_LEVEL_MULTIPLIER ** (player_character['level' -1] )))
+        player_character['xp_to_next_level'] = int(BASE_XP_TO_NEXT_LEVEL * (XP_LEVEL_MULTIPLIER ** (player_character['level'] - 1)))
         
         old_max_health = player_character['max_health']
         player_character['max_health'] += LEVEL_UP_HEALTH_BONUS
@@ -78,17 +134,70 @@ As you take your first steps into the unknown, you can't shake the feeling that 
     print(backstory_template)
     
     print(f"\nWelcome, {player_character['name']} the {player_character['race']} {player_character['origin']}, born under the sign of {player_character['star_sign']}. Your journey begins now...")
+
+    starting_ability_id = abilities.starting_abilities_for(player_character['star_sign'])
+    if starting_ability_id:
+        ability = abilities.ABILITIES.get(starting_ability_id[0])
+        if ability:
+            print(f"\nYour sign grants you the ability: {ability['name']} — {ability['description']} (cost: {abilities.format_cost(ability)})")
     
-    player_character['health'] = 30 
+    player_character['health'] = 30
     player_character['max_health'] = 30
+    player_character['mana'] = 10
+    player_character['max_mana'] = 10
+    player_character['stamina'] = 10
+    player_character['max_stamina'] = 10
+    player_character['effects'] = []
+    player_character['known_abilities'] = abilities.starting_abilities_for(player_character['star_sign'])
     player_character['inventory'] = []
+    player_character['gold'] = 0
+    player_character['race_trait'] = None
     player_character['location'] = "beach_starting"
     player_character['last_described_location'] = None
     player_character['equipped_weapon'] = None
-    player_character['equipped_armor'] = None
     player_character['equipped_shield'] = None
+    for slot in ARMOR_SLOTS:
+        player_character[f'equipped_{slot}'] = None
     player_character['level'] = 1
     player_character['xp'] = 0
     player_character['xp_to_next_level'] = int(BASE_XP_TO_NEXT_LEVEL * (XP_LEVEL_MULTIPLIER ** 0)) # Initial XP for level 1 to 2
 
-    return player_character 
+    _apply_race(player_character)
+    _apply_origin(player_character)
+
+    return player_character
+
+
+def _apply_race(player):
+    """Apply race stat modifiers + record the race trait. Idempotent-ish — only
+    mutates the first time for each created character."""
+    race = player.get('race')
+    trait_def = game_data.RACE_TRAITS.get(race)
+    if not trait_def:
+        return
+    for field, delta in trait_def.get('stat_mods', {}).items():
+        player[field] = max(1, player.get(field, 0) + delta)
+    player['health'] = player['max_health']
+    player['mana'] = player.get('max_mana', 0)
+    player['stamina'] = player.get('max_stamina', 0)
+    player['race_trait'] = trait_def.get('trait')
+    desc = trait_def.get('description') or ""
+    trait_desc = trait_def.get('trait_description') or ""
+    if desc:
+        print(f"\nAs a {race}, {desc}")
+    if trait_desc:
+        print(f"  Racial trait: {trait_desc}")
+
+
+def _apply_origin(player):
+    """Grant origin starting inventory and gold."""
+    origin = player.get('origin')
+    kit = game_data.ORIGIN_STARTING_KIT.get(origin)
+    if not kit:
+        return
+    for iid in kit.get('inventory', []):
+        player['inventory'].append(iid)
+    player['gold'] = player.get('gold', 0) + kit.get('gold', 0)
+    flavor = kit.get('flavor')
+    if flavor:
+        print(f"\nYour {origin} upbringing left you with {flavor}.")

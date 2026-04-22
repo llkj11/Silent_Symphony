@@ -17,6 +17,11 @@ ENCOUNTER_GROUPS = {
     "generic_weak_creatures": [
         {"enemy_id": "giant_rat", "weight": 70},
         {"enemy_id": "cave_bat_swarm", "weight": 30}
+    ],
+    "rocky_shoreline_creatures": [
+        {"enemy_id": "giant_crab_rockshore", "weight": 60},
+        {"enemy_id": "sea_serpent_hatchling", "weight": 25},
+        {"enemy_id": "giant_sand_crab", "weight": 15}
     ]
     # Add more encounter groups for different environments/difficulty levels
 }
@@ -29,7 +34,8 @@ POI_LOOT_TABLES = {
         {"item_id": "pebble_shiny", "chance": 0.6, "min_qty": 1, "max_qty": 3},
         {"item_id": "broken_shell", "chance": 0.4, "min_qty": 1, "max_qty": 2},
         {"item_id": "healing_salve_minor", "chance": 0.15, "min_qty": 1, "max_qty": 1},
-        {"item_id": "small_tarnished_bronze_key", "chance": 0.05, "min_qty": 1, "max_qty": 1}
+        {"item_id": "small_tarnished_bronze_key", "chance": 0.05, "min_qty": 1, "max_qty": 1},
+        {"item_id": "captain_log_waterlogged", "chance": 1.0, "min_qty": 1, "max_qty": 1}
     ],
     "driftwood_log_etchings_clue": [], # No direct items, but could trigger a flag or quest update later
     "shipwreck_crate_shoreline": [
@@ -60,7 +66,7 @@ LOCATIONS = {
                 "type": "loot_container",
                 "loot_table_ids": ["beach_chest_common_loot"],
                 "locked": True, "key_id": "small_tarnished_bronze_key", "lock_difficulty": 5, 
-                "trapped_chance": 1.0, # TEMPORARILY SET TO 1.0 FOR TESTING
+                "trapped_chance": 0.25,
                 "trap_enemy_id": "giant_sand_crab", 
                 "interaction_prompt_to_ai_on_open": "The player manages to open the barnacle-encrusted chest.",
                 "interaction_prompt_to_ai_if_locked": "The player tries the barnacle-encrusted chest, but it's firmly locked.",
@@ -91,6 +97,7 @@ LOCATIONS = {
         },
         "items_common_find": ["pebble_shiny", "seaweed_clump", "broken_shell"], # Items found generically
         "properties": ["coastal", "sandy_terrain", "open_area", "salt_air"],
+        "weather_pool": ["clear", "overcast", "windy", "foggy", "stormy"],
         "ambient_sounds_ai_prompt": "Describe the ambient sounds of Shifting Sands Beach: waves, seabirds, wind."
     },
     "coastal_dunes_edge": {
@@ -109,11 +116,41 @@ LOCATIONS = {
         "encounter_groups": ["dunes_low_level", "beach_low_level"], # Can have some overlap
         "exits": {
             "south": "beach_starting",
-            "northwest": "dunes_hinterland" # Deeper into the dunes
+            "northwest": "dunes_hinterland", # Deeper into the dunes
+            "east": "survivor_camp"
         },
         "items_common_find": ["flint_sharp", "bent_spoon"],
         "properties": ["coastal_dunes", "sandy_terrain", "exposed", "windy"],
+        "weather_pool": ["clear", "windy", "overcast", "foggy"],
         "ambient_sounds_ai_prompt": "Describe the ambient sounds of the Coastal Dunes edge: wind whistling, distant surf, maybe the skittering of unseen creatures."
+    },
+    "survivor_camp": {
+        "id": "survivor_camp",
+        "name": "Survivor's Cove Camp",
+        "description_first_visit_prompt": "The player comes upon a makeshift camp tucked between two dunes — driftwood lean-tos, a smoldering fire, a weathered flag flapping from a crooked pole. Wary faces glance up and return to their work. A woman in travel-stained robes keeps watch over bundled goods near the fire. Describe the scene atmospherically: scarcity, uneasy welcome, the sense that these survivors have been here a while.",
+        "description_revisit_prompt": "The player returns to the Survivor's Cove Camp. Briefly describe the same wary faces, the trader at her bundles, the smoke drifting seaward.",
+        "defined_pois": [
+            {
+                "poi_id": "camp_fire",
+                "display_text_for_player_choice": "A driftwood fire ringed with smoke-blackened stones.",
+                "type": "clue_object",
+                "interaction_prompt_to_ai": "The player inspects the campfire. Describe the ash, the arrangement of stones, a scrap of half-burnt paper someone tossed in — a small, specific detail that hints at the camp's recent days."
+            },
+            {
+                "poi_id": "camp_flag",
+                "display_text_for_player_choice": "A weathered flag tied to a crooked pole, emblem sun-faded.",
+                "type": "clue_object",
+                "interaction_prompt_to_ai": "The player examines the flag. Describe the faded emblem — it's the mark of a merchant guild that ran trade routes along this coast. Hint that someone here knows the old paths."
+            }
+        ],
+        "encounter_groups": [],
+        "exits": {
+            "west": "coastal_dunes_edge"
+        },
+        "items_common_find": [],
+        "properties": ["safe_zone", "settlement", "coastal"],
+        "safe": True,
+        "ambient_sounds_ai_prompt": "Low voices, the crackle of a small fire, gulls, the distant sea."
     },
     "rocky_shoreline_west": {
         "id": "rocky_shoreline_west",
@@ -130,12 +167,13 @@ LOCATIONS = {
                 "interaction_prompt_to_ai_on_open": "The player manages to break open the shipwrecked crate."
             }
         ],
-        "encounter_groups": ["beach_low_level", "giant_crab_rockshore"], # Specific enemy type
+        "encounter_groups": ["beach_low_level", "rocky_shoreline_creatures"],
         "exits": {
             "east": "beach_starting"
         },
         "items_common_find": ["broken_shell", "seaweed_clump", "crab_chitin_fragment"],
         "properties": ["coastal", "rocky_terrain", "tide_pools", "slippery"],
+        "weather_pool": ["clear", "overcast", "stormy", "windy", "foggy"],
         "ambient_sounds_ai_prompt": "Describe the ambient sounds of the Rocky Shoreline: crashing waves, seabird cries, water gurgling in crevices."
     }
     # Add more locations as the game expands

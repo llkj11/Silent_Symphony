@@ -14,6 +14,11 @@ import combat
 import saveload
 import entities
 import locations # Import the new locations module
+import effects
+import world
+import ai_context
+import npcs
+import quests
 
 # Helper function to safely get text from AI response part
 def get_text_from_part(part):
@@ -87,39 +92,44 @@ def parse_outcome(ai_text):
     return outcome
 
 # --- Helper function to get a random enemy from location's encounter groups ---
-def get_random_enemy_for_location(location_id, specific_group=None):
+def get_random_enemy_for_location(location_id, specific_group=None, player=None):
     current_location_data = locations.LOCATIONS.get(location_id)
     if not current_location_data:
         return None
 
     encounter_group_names_for_location = current_location_data.get('encounter_groups', [])
     if not encounter_group_names_for_location:
-        return None # No encounter groups defined for this location
+        return None
 
-    chosen_group_name = None
     if specific_group and specific_group in encounter_group_names_for_location:
-        # If a specific, valid group is requested for this location, use it
         chosen_group_name = specific_group
-    elif specific_group: # A specific group was asked for, but it's not valid for this location
+    elif specific_group:
         if config.DEBUG_MODE: print(f"DEBUG: Requested specific_group '{specific_group}' not valid for location '{location_id}'. Falling back.")
-        # Fallback to random choice if specific group isn't valid for the location
         chosen_group_name = random.choice(encounter_group_names_for_location) if encounter_group_names_for_location else None
     else:
-        # Pick one of the location's encounter groups randomly if no specific group requested
         chosen_group_name = random.choice(encounter_group_names_for_location) if encounter_group_names_for_location else None
-    
+
     if not chosen_group_name:
-        return None # Could not determine an encounter group
+        return None
 
     encounter_list = locations.ENCOUNTER_GROUPS.get(chosen_group_name, [])
-    
     if not encounter_list:
-        return None # Chosen group is empty or not found
+        return None
 
-    # Weighted random choice from the encounter list
+    # Drop already-slain unique enemies so named bosses don't respawn.
+    if player is not None:
+        encounter_list = [
+            entry for entry in encounter_list
+            if not (
+                entities.ENEMY_TEMPLATES.get(entry.get("enemy_id"), {}).get("unique")
+                and world.is_enemy_slain(player, entry.get("enemy_id"))
+            )
+        ]
+        if not encounter_list:
+            return None
+
     total_weight = sum(entry.get("weight", 0) for entry in encounter_list)
-    if total_weight == 0: # Avoid division by zero if all weights are 0
-        # Fallback to uniform random choice if weights are problematic
+    if total_weight == 0:
         return random.choice(encounter_list).get("enemy_id") if encounter_list else None
 
     random_pick = random.uniform(0, total_weight)
@@ -128,7 +138,300 @@ def get_random_enemy_for_location(location_id, specific_group=None):
         current_sum += entry.get("weight", 0)
         if random_pick <= current_sum:
             return entry.get("enemy_id")
-    return None # Should not be reached if weights are positive
+    return None
+
+# --- AI prompt + handler helpers ---
+def _prompt_with_context(player, location_id, base_prompt):
+    prefix = ai_context.build_context_prefix(player, location_id, locations.LOCATIONS, items.ITEM_DB)
+    return prefix + base_prompt
+
+
+def _handle_offer_choice(setup_narrative, choices):
+    """AI-generated branching choice. Prints setup, asks player, prints chosen outcome."""
+    if setup_narrative:
+        print(f"\n{setup_narrative}")
+    normalized = []
+    for c in choices or []:
+        label = c.get("label") if hasattr(c, "get") else None
+        outcome = c.get("outcome_narrative") if hasattr(c, "get") else None
+        if label and outcome:
+            normalized.append((label, outcome))
+    if not normalized:
+        print("You pause, then decide it does not matter and move on.")
+        return
+    labels = [label for label, _ in normalized]
+    chosen_label = ui.get_numbered_choice("How do you proceed?", labels)
+    outcome_text = dict(normalized)[chosen_label]
+    print(f"\n{outcome_text}")
+
+
+def _npc_pois_for(location_id):
+    """Build ephemeral POI entries for every NPC present in the location."""
+    out = []
+    for npc in npcs.npcs_at(location_id):
+        out.append({
+            "poi_id": f"_npc_{npc['id']}",
+            "type": "npc",
+            "npc_id": npc["id"],
+            "ephemeral": True,
+            "display_text_for_player_choice": f"{npc['name']}, a {npc.get('title','stranger')}.",
+        })
+    return out
+
+
+def _interact_with_npc(player, npc_id):
+    npc = npcs.get(npc_id)
+    if not npc:
+        print("They look at you blankly and turn away.")
+        return
+    print(f"\n{npc['name']}: {npc.get('greeting','')}")
+    ai_context.log_event(player, f"Met {npc['name']} at {npc.get('location','?')}.", significance="significant")
+
+    quests.on_event(player, "npc_interacted", npc_id=npc_id)
+
+    role = npc.get("role")
+    while True:
+        options = []
+        if role == "merchant":
+            options.append("Trade")
+        elif role == "healer":
+            options.append("Heal")
+        options.append("Leave")
+        chosen = ui.get_numbered_choice(f"What do you want to do with {npc['name']}?", options)
+        if chosen == "Leave":
+            print(f"\n{npc['name']}: {npc.get('farewell','...')}")
+            break
+        if chosen == "Trade":
+            _merchant_loop(player, npc)
+        elif chosen == "Heal":
+            _healer_loop(player, npc)
+
+
+def _healer_loop(player, npc):
+    DOT_KINDS = ("poison", "bleeding", "burn")
+    heal_per_hp = npc.get("heal_cost_per_hp", 1)
+    cure_cost = npc.get("cure_cost", 8)
+    rest_cost = npc.get("rest_cost", 15)
+    while True:
+        missing = player.get("max_health", 0) - player.get("health", 0)
+        has_dots = any(e.get("kind") in DOT_KINDS for e in player.get("effects", []))
+        full_heal_cost = missing * heal_per_hp
+        print(f"\nYour gold: {player.get('gold', 0)}")
+        options = []
+        if missing > 0:
+            options.append(f"Restore HP ({missing} HP for {full_heal_cost}g)")
+        if has_dots:
+            options.append(f"Cure ailments ({cure_cost}g)")
+        options.append(f"Full rest — HP/mana/stamina + ailments ({rest_cost}g)")
+        options.append("Back")
+        chosen = ui.get_numbered_choice(f"{npc['name']} asks what you need.", options)
+        if chosen == "Back":
+            return
+        if chosen.startswith("Restore HP"):
+            if player.get("gold", 0) < full_heal_cost:
+                print(f"{npc['name']}: \"I can't work miracles without coin.\"")
+                continue
+            player["gold"] -= full_heal_cost
+            player["health"] = player["max_health"]
+            print(f"{npc['name']} tends your wounds. HP restored to {player['health']}/{player['max_health']}. (Gold: {player['gold']})")
+            ai_context.log_event(player, f"Healed by {npc['name']} for {full_heal_cost}g.", significance="normal")
+        elif chosen.startswith("Cure ailments"):
+            if player.get("gold", 0) < cure_cost:
+                print(f"{npc['name']}: \"The herbs for that aren't free.\"")
+                continue
+            player["gold"] -= cure_cost
+            cleared = [e["kind"] for e in player.get("effects", []) if e.get("kind") in DOT_KINDS]
+            player["effects"] = [e for e in player.get("effects", []) if e.get("kind") not in DOT_KINDS]
+            print(f"{npc['name']} presses poultices to your skin. Cleared: {', '.join(cleared) or 'nothing'}. (Gold: {player['gold']})")
+            ai_context.log_event(player, f"Cured ailments by {npc['name']}.", significance="normal")
+        elif chosen.startswith("Full rest"):
+            if player.get("gold", 0) < rest_cost:
+                print(f"{npc['name']}: \"Rest and food cost what they cost.\"")
+                continue
+            player["gold"] -= rest_cost
+            player["health"] = player["max_health"]
+            player["mana"] = player.get("max_mana", 0)
+            player["stamina"] = player.get("max_stamina", 0)
+            player["effects"] = [e for e in player.get("effects", []) if e.get("kind") not in DOT_KINDS]
+            world.tick_turn(player, count=2)
+            print(f"You rest under {npc['name']}'s watch. Fully restored. (Gold: {player['gold']})")
+            ai_context.log_event(player, f"Rested under {npc['name']}'s care.", significance="normal")
+
+
+def _merchant_loop(player, npc):
+    while True:
+        print(f"\nYour gold: {player.get('gold', 0)}")
+        chosen = ui.get_numbered_choice("Trade what?", ["Buy", "Sell", "Back"])
+        if chosen == "Back":
+            return
+        if chosen == "Buy":
+            _merchant_buy(player, npc)
+        elif chosen == "Sell":
+            _merchant_sell(player, npc)
+
+
+def _merchant_buy(player, npc):
+    stock = [iid for iid in npc.get("shop_inventory", []) if iid in items.ITEM_DB]
+    if not stock:
+        print(f"{npc['name']} has nothing for sale.")
+        return
+    display = []
+    for iid in stock:
+        data = items.ITEM_DB[iid]
+        price = npcs.buy_price(npc, data.get("value", 0))
+        display.append(f"{data['name']} — {price}g ({data.get('type','item')})")
+    display.append("[Back]")
+    chosen = ui.get_numbered_choice("Buy which?", display)
+    if chosen == "[Back]":
+        return
+    idx = display.index(chosen)
+    item_id = stock[idx]
+    data = items.ITEM_DB[item_id]
+    price = npcs.buy_price(npc, data.get("value", 0))
+    if player.get("gold", 0) < price:
+        print(f"{npc['name']}: \"You haven't the coin for that.\"")
+        return
+    player["gold"] -= price
+    player["inventory"].append(item_id)
+    print(f"You buy {data['name']} for {price}g. (Gold left: {player['gold']})")
+    ai_context.log_event(player, f"Bought {data['name']} from {npc['name']} for {price}g.", significance="normal")
+
+
+def _merchant_sell(player, npc):
+    inventory = player.get("inventory", [])
+    sellable = [iid for iid in inventory if iid in items.ITEM_DB and items.ITEM_DB[iid].get("value", 0) > 0]
+    if not sellable:
+        print(f"{npc['name']}: \"Nothing you've brought interests me.\"")
+        return
+    seen = set()
+    choices = []
+    for iid in sellable:
+        if iid in seen:
+            continue
+        seen.add(iid)
+        count = sellable.count(iid)
+        data = items.ITEM_DB[iid]
+        price = npcs.sell_price(npc, data.get("value", 0))
+        name = data["name"]
+        label = f"{name} x{count}" if count > 1 else name
+        choices.append((iid, f"{label} — {price}g"))
+    display = [label for _, label in choices] + ["[Back]"]
+    chosen = ui.get_numbered_choice("Sell which?", display)
+    if chosen == "[Back]":
+        return
+    item_id = choices[display.index(chosen)][0]
+    data = items.ITEM_DB[item_id]
+    price = npcs.sell_price(npc, data.get("value", 0))
+    player["inventory"].remove(item_id)
+    player["gold"] = player.get("gold", 0) + price
+    print(f"You sell {data['name']} for {price}g. (Gold: {player['gold']})")
+    ai_context.log_event(player, f"Sold {data['name']} to {npc['name']} for {price}g.", significance="normal")
+
+
+def _handle_set_world_flag(player, location_id, flag_name, scope, narrative):
+    """AI-initiated persistent flag. Engine records, prints the narrative, logs as significant."""
+    if not flag_name:
+        return
+    flag_name = str(flag_name).strip()
+    if scope == "location":
+        world.set_flag(player, flag_name, True, scope=location_id)
+        scope_label = f"@{location_id}"
+    else:
+        world.set_flag(player, flag_name, True)
+        scope_label = "global"
+    if narrative:
+        print(f"\n{narrative}")
+    ai_context.log_event(player, f"Flag set: {flag_name} ({scope_label}).", significance="significant")
+
+
+def _build_ephemeral_poi(display_text, narrative):
+    if not display_text or not narrative:
+        return None
+    return {
+        "poi_id": f"_flavor_{random.randint(10000, 99999)}",
+        "type": "simple_description",
+        "ephemeral": True,
+        "display_text_for_player_choice": display_text.strip(),
+        "_preresolved_narrative": narrative.strip(),
+    }
+
+
+def _parse_flavor_poi(resp):
+    """Extract an add_flavor_poi call from an AI response; return ephemeral POI dict or None."""
+    try:
+        if config.AI_PROVIDER == "GEMINI":
+            if hasattr(resp, 'candidates') and resp.candidates and \
+               hasattr(resp.candidates[0], 'content') and hasattr(resp.candidates[0].content, 'parts'):
+                for part in resp.candidates[0].content.parts:
+                    fc = getattr(part, 'function_call', None)
+                    if fc and fc.name == "add_flavor_poi":
+                        a = fc.args
+                        return _build_ephemeral_poi(a.get('display_text'), a.get('outcome_narrative'))
+        elif config.AI_PROVIDER == "OPENAI":
+            if hasattr(resp, 'choices') and resp.choices:
+                msg = resp.choices[0].message
+                if getattr(msg, 'tool_calls', None):
+                    for tc in msg.tool_calls:
+                        if tc.function.name == "add_flavor_poi":
+                            a = json.loads(tc.function.arguments)
+                            return _build_ephemeral_poi(a.get('display_text'), a.get('outcome_narrative'))
+    except Exception as e:
+        if config.DEBUG_MODE: print(f"DEBUG: flavor POI parse error: {e}")
+    return None
+
+
+def _maybe_generate_flavor_poi(player, location_id, existing_pois):
+    """Ask the AI to contribute one ephemeral POI if it meaningfully adds to the scene.
+
+    Gated so we don't spam extra AI calls: always try when engine POIs are exhausted,
+    otherwise a small random chance.
+    """
+    if not config.global_ai_client:
+        return None
+    n_existing = len(existing_pois)
+    if n_existing >= 3:
+        return None
+    if n_existing > 0 and random.random() > 0.35:
+        return None
+
+    loc_data = locations.LOCATIONS.get(location_id, {})
+    loc_name = loc_data.get('name', location_id)
+    existing_desc = "; ".join(p.get('display_text_for_player_choice', '?') for p in existing_pois)
+    if not existing_desc:
+        existing_desc = "(nothing else stands out right now)"
+
+    prompt = (
+        f"The player is exploring {loc_name}. Existing points of interest: {existing_desc}. "
+        "If a fresh, specific, purely-atmospheric detail would enrich this moment, call `add_flavor_poi` "
+        "with one short display_text and a 1–3 sentence outcome_narrative. "
+        "If nothing better fits than what's already listed, call `narrative_outcome` with text 'none'. "
+        "Do not repeat existing POIs. No items, enemies, or state changes."
+    )
+    resp = ai_utils.get_ai_model_response(_prompt_with_context(player, location_id, prompt))
+    return _parse_flavor_poi(resp)
+
+
+def _log_combat_result(player, enemy_name, result):
+    if result == "won":
+        ai_context.log_event(player, f"Defeated a {enemy_name}.", significance="significant")
+    elif result == "fled":
+        ai_context.log_event(player, f"Fled from a {enemy_name}.", significance="significant")
+    elif result == "lost":
+        ai_context.log_event(player, f"Was defeated by a {enemy_name}.", significance="significant")
+
+
+def _handle_skill_check(difficulty, description, success_narrative, failure_narrative):
+    """AI-authored gamble. Engine rolls 1d10; >= difficulty = success."""
+    try:
+        difficulty = int(difficulty)
+    except (TypeError, ValueError):
+        difficulty = 5
+    difficulty = max(1, min(10, difficulty))
+    roll = random.randint(1, 10)
+    succeeded = roll >= difficulty
+    print(f"\n[Skill check: {description or 'attempt'} — rolled {roll} vs difficulty {difficulty} → {'SUCCESS' if succeeded else 'FAILURE'}]")
+    print(success_narrative if succeeded else failure_narrative)
+
 
 # --- New Helper: Process POI Loot Table ---
 def process_poi_loot(loot_table_ids):
@@ -196,10 +499,12 @@ def game():
     main_game_actions = {
         "1": "Explore this area",
         "2": "Move to another area",
-        "3": "Manage Inventory", 
+        "3": "Manage Inventory",
         "4": "View character stats",
-        "5": "Save Game",
-        "6": "Quit game"
+        "5": "Rest",
+        "6": "View Quest Log",
+        "7": "Save Game",
+        "8": "Quit game"
     }
     
     current_location_id = player['location']
@@ -210,8 +515,11 @@ def game():
         return
 
     if player.get('last_described_location') != current_location_id:
-        description_prompt = current_location_data.get('description_first_visit_prompt', f"You are at {current_location_data.get('name', current_location_id)}.")
-        ai_response_obj = ai_utils.get_ai_model_response(description_prompt)
+        visits_now = world.mark_visit(player, current_location_id)
+        quests.on_event(player, "location_entered", location_id=current_location_id)
+        prompt_key = 'description_first_visit_prompt' if visits_now <= 1 else 'description_revisit_prompt'
+        description_prompt = current_location_data.get(prompt_key, f"You are at {current_location_data.get('name', current_location_id)}.")
+        ai_response_obj = ai_utils.get_ai_model_response(_prompt_with_context(player, current_location_id, description_prompt))
         desc_text = f"You arrive at {current_location_data.get('name', 'this new area')}."
         
         try:
@@ -260,6 +568,7 @@ def game():
             if config.DEBUG_MODE: import traceback; traceback.print_exc()
             print(f"\nHaving just arrived at {current_location_data.get('name', 'this new area')}, you take a moment to get your bearings. (Exception during AI processing)")
         player['last_described_location'] = current_location_id
+        ai_context.log_event(player, f"Arrived at {current_location_data.get('name', current_location_id)}.")
 
     while not game_over:
         current_location_id = player['location']
@@ -280,15 +589,27 @@ def game():
             
             if selected_action == 'Explore this area':
                 print("\nYou decide to look around more closely...")
-                
-                # --- Stage 1: Select POIs from Location Definition ---
+                world.tick_turn(player)
+
+                # --- Stage 1: Select POIs from Location Definition (filter out already-resolved ones) ---
                 defined_pois_for_location = current_location_data.get('defined_pois', [])
                 available_pois_to_present = []
                 if defined_pois_for_location:
-                    # Select a subset of POIs to present to the player (e.g., 2 to 4)
-                    num_pois_to_offer = min(len(defined_pois_for_location), random.randint(2, 4))
-                    available_pois_to_present = random.sample(defined_pois_for_location, num_pois_to_offer)
-                
+                    active_pois = world.active_pois(player, current_location_id, defined_pois_for_location)
+                    if active_pois:
+                        num_pois_to_offer = min(len(active_pois), random.randint(2, 4))
+                        available_pois_to_present = random.sample(active_pois, num_pois_to_offer)
+
+                # --- Stage 1a: Optionally let the AI contribute one ephemeral flavor POI. ---
+                flavor_poi = _maybe_generate_flavor_poi(player, current_location_id, available_pois_to_present)
+                if flavor_poi:
+                    available_pois_to_present.append(flavor_poi)
+
+                # --- Stage 1b: Surface NPCs present in this location as always-available POIs. ---
+                npc_pois = _npc_pois_for(current_location_id)
+                if npc_pois:
+                    available_pois_to_present = npc_pois + available_pois_to_present
+
                 if not available_pois_to_present:
                     print("You scan the area intently, but nothing specific catches your eye for closer investigation right now.")
                     # Optional: Generic small item find even if no POIs presented
@@ -323,57 +644,66 @@ def game():
                             determined_item_ids_to_give.append(random.choice(common_items))
                             expected_function_call_name = "player_discovers_item"
                             ai_narrative_context = f"While looking around generally in '{current_location_data.get('name')}', the player stumbles upon an item."
-                    # Temporarily force this path for testing:
-                    # elif random.random() < 0.15: 
-                    elif True: # FORCED ENEMY ENCOUNTER TEST for 'look around generally'
-                        print("DEBUG: Attempting 'look around generally' enemy encounter (chance forced to 100%).") 
+                    elif random.random() < 0.15:
                         generic_enemy_groups = current_location_data.get('encounter_groups', ["generic_weak_creatures"])
                         if generic_enemy_groups:
                             group_to_use = random.choice(generic_enemy_groups)
-                            print(f"DEBUG: Chosen enemy group for general look around: {group_to_use}") 
-                            determined_enemy_id_to_spawn = get_random_enemy_for_location(current_location_id, specific_group=group_to_use)
-                            print(f"DEBUG: Determined enemy to spawn from general look around: {determined_enemy_id_to_spawn}") 
+                            determined_enemy_id_to_spawn = get_random_enemy_for_location(current_location_id, specific_group=group_to_use, player=player)
                             if determined_enemy_id_to_spawn:
                                 expected_function_call_name = "player_encounters_enemy"
                                 ai_narrative_context = f"While looking around generally in '{current_location_data.get('name')}', the player is surprised by an enemy."
-                            else:
-                                print("DEBUG: get_random_enemy_for_location returned None for 'look around generally' despite forced attempt.")
-                                # Fallback to narrative if no enemy could be spawned from group
-                                ai_narrative_context = f"Player {player['name']} is in '{current_location_data.get('name')}' and looks around generally, finding nothing out of the ordinary."
-                                expected_function_call_name = "narrative_outcome"
-                    if not determined_item_ids_to_give and not determined_enemy_id_to_spawn: # Ensure it still defaults to narrative if forced paths fail
+                    if not determined_item_ids_to_give and not determined_enemy_id_to_spawn:
                         ai_narrative_context = f"Player {player['name']} is in '{current_location_data.get('name')}' and looks around generally, finding nothing out of the ordinary."
                         expected_function_call_name = "narrative_outcome"
                 else:
                     chosen_poi_def = next((poi for poi in available_pois_to_present if poi.get('display_text_for_player_choice') == chosen_poi_display_text), None)
+                    if chosen_poi_def and chosen_poi_def.get('type') == 'npc':
+                        _interact_with_npc(player, chosen_poi_def['npc_id'])
+                        continue
+                    if chosen_poi_def and chosen_poi_def.get('ephemeral'):
+                        # AI-authored flavor POI — pre-resolved narrative, no state mutation.
+                        preresolved = chosen_poi_def.get('_preresolved_narrative', 'You take a closer look, but the moment passes.')
+                        print(f"\n{preresolved}")
+                        continue
                     if chosen_poi_def:
                         poi_type = chosen_poi_def.get('type')
                         ai_narrative_context = chosen_poi_def.get('interaction_prompt_to_ai', f"The player investigates '{chosen_poi_display_text}'.")
+                        poi_id = chosen_poi_def.get('poi_id')
                         if poi_type == "loot_container":
                             is_locked = chosen_poi_def.get('locked', False)
-                            # TODO: Implement actual can_unlock logic. For trap testing, assume true.
-                            can_unlock = True 
-                            is_trapped = random.random() < chosen_poi_def.get('trapped_chance', 0) 
-                            if config.DEBUG_MODE: print(f"DEBUG: POI loot_container. Locked: {is_locked}, Can Unlock (temp): {can_unlock}, Trapped Roll: {is_trapped} (Chance: {chosen_poi_def.get('trapped_chance', 0)})")
+                            key_id = chosen_poi_def.get('key_id')
+                            can_unlock = (not is_locked) or (key_id and key_id in player['inventory'])
+                            is_trapped = random.random() < chosen_poi_def.get('trapped_chance', 0)
+                            if config.DEBUG_MODE:
+                                print(f"DEBUG: POI loot_container. Locked: {is_locked}, Can Unlock: {can_unlock}, Trapped Roll: {is_trapped} (Chance: {chosen_poi_def.get('trapped_chance', 0)})")
 
                             if is_locked and not can_unlock:
+                                # Stays retryable — player may return with a key. No status mark.
                                 ai_narrative_context = chosen_poi_def.get('interaction_prompt_to_ai_if_locked', "It's locked.")
                                 expected_function_call_name = "narrative_outcome"
                             elif is_trapped:
-                                print("DEBUG: Trap sprung on POI!") 
+                                if config.DEBUG_MODE: print("DEBUG: Trap sprung on POI!")
                                 ai_narrative_context = chosen_poi_def.get('interaction_prompt_to_ai_if_trap_sprung', "A trap springs!")
                                 determined_enemy_id_to_spawn = chosen_poi_def.get('trap_enemy_id')
-                                print(f"DEBUG: Trap enemy ID determined: {determined_enemy_id_to_spawn}") 
+                                if config.DEBUG_MODE: print(f"DEBUG: Trap enemy ID determined: {determined_enemy_id_to_spawn}")
                                 expected_function_call_name = "player_encounters_enemy"
-                            else: 
-                                ai_narrative_context = chosen_poi_def.get('interaction_prompt_to_ai_on_open', "The player opens it.")
+                                world.set_poi_state(player, current_location_id, poi_id, "sprung")
+                                quests.on_event(player, "poi_resolved", location_id=current_location_id, poi_id=poi_id, status="sprung")
+                            else:
+                                if is_locked and can_unlock:
+                                    ai_narrative_context = f"Using their {items.ITEM_DB.get(key_id, {}).get('name', 'key')}, "
+                                else:
+                                    ai_narrative_context = ""
+                                ai_narrative_context += chosen_poi_def.get('interaction_prompt_to_ai_on_open', "The player opens it.")
                                 determined_item_ids_to_give = process_poi_loot(chosen_poi_def.get('loot_table_ids', []))
                                 if determined_item_ids_to_give:
                                     expected_function_call_name = "player_discovers_item"
                                 else:
                                     ai_narrative_context += " It appears to be empty."
                                     expected_function_call_name = "narrative_outcome"
-                        
+                                world.set_poi_state(player, current_location_id, poi_id, "looted")
+                                quests.on_event(player, "poi_resolved", location_id=current_location_id, poi_id=poi_id, status="looted")
+
                         elif poi_type == "loot_scatter":
                             if random.random() < chosen_poi_def.get('success_chance', 1.0):
                                 ai_narrative_context = chosen_poi_def.get('interaction_prompt_to_ai_on_success', "They succeed!")
@@ -381,19 +711,28 @@ def game():
                                 if item_to_yield: determined_item_ids_to_give.append(item_to_yield)
                                 if determined_item_ids_to_give:
                                      expected_function_call_name = "player_discovers_item"
-                                else: # Success but somehow no item defined
+                                else:
                                      expected_function_call_name = "narrative_outcome"
                             else:
                                 ai_narrative_context = chosen_poi_def.get('interaction_prompt_to_ai_on_fail', "They fail.")
                                 expected_function_call_name = "narrative_outcome"
+                            world.set_poi_state(player, current_location_id, poi_id, "exhausted")
+                            quests.on_event(player, "poi_resolved", location_id=current_location_id, poi_id=poi_id, status="exhausted")
 
-                        elif poi_type == "clue_object" or poi_type == "simple_description" or poi_type == "navigation_hint":
-                            # These primarily result in narrative outcomes
-                            # Game logic for revealing exits or updating quest flags would go here if applicable
+                        elif poi_type in ("clue_object", "simple_description", "navigation_hint"):
                             if poi_type == "navigation_hint" and config.DEBUG_MODE:
                                 print(f"DEBUG: Navigation hint POI investigated, reveals: {chosen_poi_def.get('reveals_exit_to')}")
                             expected_function_call_name = "narrative_outcome"
-                            # ai_narrative_context is already set from POI def
+                            status_for_type = {
+                                "clue_object": "read",
+                                "simple_description": "observed",
+                                "navigation_hint": "revealed",
+                            }[poi_type]
+                            extra = {}
+                            if poi_type == "navigation_hint" and chosen_poi_def.get('reveals_exit_to'):
+                                extra['reveals_exit_to'] = chosen_poi_def['reveals_exit_to']
+                            world.set_poi_state(player, current_location_id, poi_id, status_for_type, **extra)
+                            quests.on_event(player, "poi_resolved", location_id=current_location_id, poi_id=poi_id, status=status_for_type)
                         else:
                              expected_function_call_name = "narrative_outcome" # Default for unknown POI types
                     else:
@@ -409,11 +748,26 @@ def game():
                 elif expected_function_call_name == "player_encounters_enemy":
                     enemy_name_for_ai_prompt = entities.ENEMY_TEMPLATES.get(determined_enemy_id_to_spawn, {}).get("name", "a creature")
                     outcome_prompt = f"{ai_narrative_context} An enemy ({enemy_name_for_ai_prompt}) appears! Craft a short narrative for this encounter and call 'player_encounters_enemy' with enemy_id='{determined_enemy_id_to_spawn}' and your encounter_narrative."
-                else: # narrative_outcome
-                    outcome_prompt = f"{ai_narrative_context} Describe this scene or outcome. Call 'narrative_outcome' with your narrative_text."
+                else: # narrative_outcome — let AI escalate to branch/roll if it makes the scene better
+                    outcome_prompt = (
+                        f"{ai_narrative_context} Describe this scene or outcome. Call ONE of: "
+                        "'narrative_outcome' (pure description); "
+                        "'offer_choice' (2–3 options with pre-authored outcomes, only if a meaningful branch naturally fits); "
+                        "'skill_check' (difficulty + success/failure narratives, only if the result hinges on luck or skill). "
+                        "Prefer narrative_outcome unless branching or chance clearly improves the moment."
+                    )
+
+                if chosen_poi_display_text != "Ignore these and look around generally":
+                    chosen_poi_def_for_log = next((p for p in available_pois_to_present if p.get('display_text_for_player_choice') == chosen_poi_display_text), None)
+                    if chosen_poi_def_for_log:
+                        pstate = world.poi_state(player, current_location_id, chosen_poi_def_for_log.get('poi_id'))
+                        if pstate and pstate.get('status'):
+                            short_label = chosen_poi_display_text[:60]
+                            sig = "significant" if pstate['status'] == "sprung" else "normal"
+                            ai_context.log_event(player, f"Investigated '{short_label}' → {pstate['status']}.", significance=sig)
 
                 if config.DEBUG_MODE: print(f"DEBUG (Stage 3 AI Prompt): {outcome_prompt}")
-                ai_response_stage3 = ai_utils.get_ai_model_response(outcome_prompt)
+                ai_response_stage3 = ai_utils.get_ai_model_response(_prompt_with_context(player, current_location_id, outcome_prompt))
                 function_called_successfully = False
                 try:
                     # ... (Provider-aware response parsing as before) ...
@@ -433,6 +787,7 @@ def game():
                                                 if item_id in items.ITEM_DB:
                                                     player['inventory'].append(item_id)
                                                     print(f"You obtained: {items.ITEM_DB[item_id]['name']}! Added to inventory.")
+                                                    quests.on_event(player, "item_obtained", item_id=item_id)
                                                 elif config.DEBUG_MODE: print(f"DEBUG: Game logic provided unknown item_id: {item_id}")
                                         else: # AI called discover but game logic found nothing (should be rare with new flow)
                                             if config.DEBUG_MODE: print(f"DEBUG: AI called discover_item but game logic had no items.")
@@ -444,7 +799,11 @@ def game():
                                         print(f"\n{narrative}")
                                         if determined_enemy_id_to_spawn: # Use game-determined enemy
                                             enemy_instance = entities.get_enemy_instance(determined_enemy_id_to_spawn)
-                                            if enemy_instance: combat_result = combat.combat(player, enemy_instance); game_over = True if combat_result == "lost" else game_over
+                                            if enemy_instance:
+                                                combat_result = combat.combat(player, enemy_instance)
+                                                _log_combat_result(player, enemy_instance.get('name', determined_enemy_id_to_spawn), combat_result)
+                                                if combat_result == "lost":
+                                                    game_over = True
                                             else: print("A menacing presence fades.")
                                         else: # AI called encounter but game logic had no enemy (should be rare)
                                             if config.DEBUG_MODE: print(f"DEBUG: AI called encounter_enemy but game logic had no enemy.")
@@ -454,6 +813,33 @@ def game():
                                     elif function_call.name == "narrative_outcome":
                                         narrative = function_call.args.get('narrative_text', "You observe your surroundings quietly."); print(f"\n{narrative}");
                                         function_called_successfully = True; break
+
+                                    elif function_call.name == "offer_choice":
+                                        setup = function_call.args.get('setup_narrative', '')
+                                        choices = list(function_call.args.get('choices', []) or [])
+                                        _handle_offer_choice(setup, choices)
+                                        function_called_successfully = True; break
+
+                                    elif function_call.name == "skill_check":
+                                        a = function_call.args
+                                        _handle_skill_check(
+                                            a.get('difficulty', 5),
+                                            a.get('description', ''),
+                                            a.get('success_narrative', ''),
+                                            a.get('failure_narrative', ''),
+                                        )
+                                        function_called_successfully = True; break
+
+                                    elif function_call.name == "set_world_flag":
+                                        a = function_call.args
+                                        _handle_set_world_flag(
+                                            player, current_location_id,
+                                            a.get('flag_name'),
+                                            a.get('scope', 'global'),
+                                            a.get('narrative', ''),
+                                        )
+                                        function_called_successfully = True; break
+
                                     else: print("\nA strange feeling washes over you..."); function_called_successfully = True; break
                     # --- OPENAI PATH ---
                     elif config.AI_PROVIDER == "OPENAI":
@@ -469,7 +855,10 @@ def game():
                                     print(f"\n{narrative}")
                                     if determined_item_ids_to_give:
                                         for item_id in determined_item_ids_to_give:
-                                            if item_id in items.ITEM_DB: player['inventory'].append(item_id); print(f"You obtained: {items.ITEM_DB[item_id]['name']}! Added to inventory.")
+                                            if item_id in items.ITEM_DB:
+                                                player['inventory'].append(item_id)
+                                                print(f"You obtained: {items.ITEM_DB[item_id]['name']}! Added to inventory.")
+                                                quests.on_event(player, "item_obtained", item_id=item_id)
                                             elif config.DEBUG_MODE: print(f"DEBUG: Game logic provided unknown item_id: {item_id}")
                                     else: print("It seemed valuable, but crumbled to dust.")
                                     function_called_successfully = True; break
@@ -479,7 +868,11 @@ def game():
                                     print(f"\n{narrative}")
                                     if determined_enemy_id_to_spawn:
                                         enemy_instance = entities.get_enemy_instance(determined_enemy_id_to_spawn)
-                                        if enemy_instance: combat_result = combat.combat(player, enemy_instance); game_over = True if combat_result == "lost" else game_over
+                                        if enemy_instance:
+                                            combat_result = combat.combat(player, enemy_instance)
+                                            _log_combat_result(player, enemy_instance.get('name', determined_enemy_id_to_spawn), combat_result)
+                                            if combat_result == "lost":
+                                                game_over = True
                                         else: print("A menacing presence fades.")
                                     else: print("You sense danger, but it quickly passes.")
                                     function_called_successfully = True; break
@@ -487,6 +880,32 @@ def game():
                                 elif function_name == "narrative_outcome":
                                     narrative = args.get('narrative_text', "You observe your surroundings quietly."); print(f"\n{narrative}");
                                     function_called_successfully = True; break
+
+                                elif function_name == "offer_choice":
+                                    _handle_offer_choice(
+                                        args.get('setup_narrative', ''),
+                                        list(args.get('choices', []) or []),
+                                    )
+                                    function_called_successfully = True; break
+
+                                elif function_name == "skill_check":
+                                    _handle_skill_check(
+                                        args.get('difficulty', 5),
+                                        args.get('description', ''),
+                                        args.get('success_narrative', ''),
+                                        args.get('failure_narrative', ''),
+                                    )
+                                    function_called_successfully = True; break
+
+                                elif function_name == "set_world_flag":
+                                    _handle_set_world_flag(
+                                        player, current_location_id,
+                                        args.get('flag_name'),
+                                        args.get('scope', 'global'),
+                                        args.get('narrative', ''),
+                                    )
+                                    function_called_successfully = True; break
+
                                 else: print("\nA strange feeling washes over you..."); function_called_successfully = True; break
                     
                     if not function_called_successfully: 
@@ -520,10 +939,13 @@ def game():
                     player['last_described_location'] = None 
                     new_location_data = locations.LOCATIONS.get(new_location_id)
                     if new_location_data:
-                        desc_prompt_key = 'description_first_visit_prompt' 
+                        world.tick_turn(player)
+                        visits_now = world.mark_visit(player, new_location_id)
+                        quests.on_event(player, "location_entered", location_id=new_location_id)
+                        desc_prompt_key = 'description_first_visit_prompt' if visits_now <= 1 else 'description_revisit_prompt'
                         description_prompt = new_location_data.get(desc_prompt_key, f"You arrive at {new_location_data.get('name')}.")
                         print(f"\nMoving to {new_location_data.get('name')}...")
-                        ai_loc_resp = ai_utils.get_ai_model_response(description_prompt)
+                        ai_loc_resp = ai_utils.get_ai_model_response(_prompt_with_context(player, new_location_id, description_prompt))
                         loc_desc_text = f"You arrive at {new_location_data.get('name', 'the new area')}."
                         if isinstance(ai_loc_resp, dict) and ai_loc_resp.get("error_message"):
                             if config.DEBUG_MODE: print(f"DEBUG: AI error for new loc desc: {ai_loc_resp.get('error_message')}")
@@ -551,24 +973,98 @@ def game():
                                 elif message.content: loc_desc_text = message.content
                         print(f"\n{loc_desc_text}")
                         player['last_described_location'] = new_location_id
+                        ai_context.log_event(player, f"Traveled to {new_location_data.get('name', new_location_id)}.")
                     else:
                         print(f"Error: Could not find data for location {new_location_id}.")
             elif selected_action == 'Manage Inventory': manage_inventory(player)
             elif selected_action == 'View character stats':
                 print("\n--- Character Stats ---")
                 print(f"Name: {player['name']}")
-                print(f"Race: {player['race']}")
+                race_trait_id = player.get('race_trait')
+                race_trait_def = game_data.RACE_TRAITS.get(player['race'], {})
+                race_trait_desc = race_trait_def.get('trait_description') if race_trait_id else ""
+                trait_suffix = f" — {race_trait_desc}" if race_trait_desc else ""
+                print(f"Race: {player['race']}{trait_suffix}")
                 print(f"Origin: {player['origin']}")
                 print(f"Star Sign: {player['star_sign']}")
                 print(f"Health: {player['health']}/{player['max_health']}")
+                print(f"Mana: {player.get('mana', 0)}/{player.get('max_mana', 0)}")
+                print(f"Stamina: {player.get('stamina', 0)}/{player.get('max_stamina', 0)}")
                 print(f"Level: {player['level']}")
                 print(f"XP: {player['xp']}/{player['xp_to_next_level']}")
-                equipped_weapon_name = items.ITEM_DB[player['equipped_weapon']]['name'] if player['equipped_weapon'] else "None"
-                equipped_armor_name = items.ITEM_DB[player['equipped_armor']]['name'] if player['equipped_armor'] else "None"
-                equipped_shield_name = items.ITEM_DB[player['equipped_shield']]['name'] if player['equipped_shield'] else "None"
+                print(f"Gold: {player.get('gold', 0)}")
+                equipped_weapon_name = items.ITEM_DB[player['equipped_weapon']]['name'] if player.get('equipped_weapon') else "None"
+                equipped_shield_name = items.ITEM_DB[player['equipped_shield']]['name'] if player.get('equipped_shield') else "None"
                 print(f"Equipped Weapon: {equipped_weapon_name}")
-                print(f"Equipped Armor: {equipped_armor_name}")
                 print(f"Equipped Shield: {equipped_shield_name}")
+                for slot in character.ARMOR_SLOTS:
+                    field = f'equipped_{slot}'
+                    iid = player.get(field)
+                    name = items.ITEM_DB[iid]['name'] if iid and iid in items.ITEM_DB else "None"
+                    print(f"  {slot.capitalize()}: {name}")
+                print(f"Total Armor: {character.armor_defense_total(player, items.ITEM_DB)} | Magic Resist: {character.magic_resistance_total(player, items.ITEM_DB)}")
+                effect_summary = effects.active_effects_summary(player)
+                if effect_summary:
+                    print(f"Active effects: {effect_summary}")
+                import abilities as _abilities
+                if player.get('known_abilities'):
+                    ability_names = []
+                    for aid in player['known_abilities']:
+                        a = _abilities.ABILITIES.get(aid)
+                        if a:
+                            ability_names.append(f"{a['name']} ({_abilities.format_cost(a)})")
+                    if ability_names:
+                        print(f"Abilities: {', '.join(ability_names)}")
+            elif selected_action == 'Rest':
+                is_safe = bool(current_location_data.get('safe'))
+                world.tick_turn(player, count=4)
+                if is_safe:
+                    print("\nYou settle in and rest fully, shielded by the safety of this place.")
+                    player['health'] = player['max_health']
+                    player['mana'] = player.get('max_mana', 0)
+                    player['stamina'] = player.get('max_stamina', 0)
+                    cleared = [e['kind'] for e in player.get('effects', []) if e.get('kind') in ('poison', 'bleeding', 'burn')]
+                    player['effects'] = [e for e in player.get('effects', []) if e.get('kind') not in ('poison', 'bleeding', 'burn')]
+                    if cleared:
+                        print(f"Your body recovers from: {', '.join(cleared)}.")
+                    print(f"Fully restored: {player['health']}/{player['max_health']} HP, {player['mana']}/{player.get('max_mana',0)} Mana, {player['stamina']}/{player.get('max_stamina',0)} Stamina.")
+                    ai_context.log_event(player, f"Rested safely at {current_location_data.get('name', current_location_id)}.", significance="minor")
+                else:
+                    print("\nYou snatch a wary rest in the open, ears keen for danger.")
+                    if random.random() < 0.35:
+                        enemy_id = get_random_enemy_for_location(current_location_id, player=player)
+                        if enemy_id:
+                            enemy_instance = entities.get_enemy_instance(enemy_id)
+                            if enemy_instance:
+                                print(f"\nYour rest is cut short — a {enemy_instance.get('name','creature')} is upon you!")
+                                combat_result = combat.combat(player, enemy_instance)
+                                _log_combat_result(player, enemy_instance.get('name', enemy_id), combat_result)
+                                if combat_result == "lost":
+                                    game_over = True
+                                continue
+                    heal_hp = max(1, player['max_health'] // 3)
+                    heal_mana = max(1, player.get('max_mana', 0) // 2)
+                    player['health'] = min(player['max_health'], player['health'] + heal_hp)
+                    player['mana'] = min(player.get('max_mana', 0), player.get('mana', 0) + heal_mana)
+                    player['stamina'] = player.get('max_stamina', 0)
+                    print(f"Partial rest: HP +{heal_hp} ({player['health']}/{player['max_health']}), Mana +{heal_mana} ({player['mana']}/{player.get('max_mana',0)}), Stamina restored.")
+                    ai_context.log_event(player, f"Rested uneasily in {current_location_data.get('name', current_location_id)}.", significance="minor")
+            elif selected_action == 'View Quest Log':
+                active = quests.active_quests(player)
+                completed = quests.completed_quests(player)
+                if not active and not completed:
+                    print("\n(Your quest log is empty. Explore and talk to people to find purpose.)")
+                else:
+                    if active:
+                        print("\n--- Active Quests ---")
+                        for qid in active:
+                            print()
+                            print(quests.describe_quest(player, qid))
+                    if completed:
+                        print("\n--- Completed Quests ---")
+                        for qid in completed:
+                            print()
+                            print(quests.describe_quest(player, qid))
             elif selected_action == 'Save Game':
                 save_name = input("Enter a name for your save game: ").strip()
                 if save_name:
