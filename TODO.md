@@ -144,16 +144,34 @@ Biggest ROI tier. Data is already in `items.py` / `entities.py`; code just needs
 ## P4 — Procedural variety (replay layer)
 
 ### Travel events
-- [ ] Small pool of contextual events triggered when moving between locations. Weighted by world_state flags (injured? storm active? low inventory?).
+- [x] Small pool of contextual events triggered when moving between locations. Added `travel_events.py` with weighted, contextual outcomes: coastal caches, squalls, dune tracks, night ambushes, injury breathers, camp coin scraps, and wreckage signs.
 
 ### Rumor / fragment system
 - [ ] Reading a clue in one location unlocks a conditional POI in another. Players build understanding across areas.
+- [ ] NPC rumors, books, and clue POIs set world flags that unlock new routes, POIs, or encounter variants elsewhere.
+- [ ] Add a lightweight clue database so `reveal_clue(clue_id, narrative)` can safely surface predefined clues.
+
+### Dynamic POIs and revisits
+- [ ] Conditional POIs appear based on weather, time of day, inventory, quest state, and prior world flags.
+- [ ] Revisited locations can gain small changes after major events (boss slain, quest item read, storm passed, NPC met).
 
 ### Location expansion
 - [ ] `dunes_hinterland` (already referenced from `coastal_dunes_edge`).
-- [ ] `shipwreck_cove` (quest destination).
-- [ ] `survivor_camp` (P3 hub).
+- [x] `shipwreck_cove` (quest destination). Added as a connected rocky-shoreline location with 5 POIs, wreck loot tables, ambient snippets, a unique Drowned First Mate encounter, and an extended Echoes of the Wreck quest step.
+- [x] `survivor_camp` (P3 hub). Already implemented in P3; leaving this checked here to clean up the stale expansion note.
 - [ ] Each new location needs: first_visit_prompt, revisit_prompt, defined_pois, encounter_groups, items_common_find, properties.
+- [ ] Add horizontal optional areas so route choice matters: `shipwreck_lower_deck`, `reef_caves`, `smuggler_camp`, `old_watchtower`.
+- [ ] Give each location a local mini-arc with 2–4 connected beats, not just isolated loot nodes.
+
+### Encounter variety
+- [ ] Add encounter templates beyond "enemy appears": enemy guarding loot, wounded foe, creatures fighting, enemy flees, trap plus reward, noncombat creature leading to a find.
+- [ ] Let weather/time/location properties modify encounter weights and event outcomes.
+- [ ] Add more single-use tactical items and odd trinkets as small procedural rewards.
+
+### Weather, rest, and world pressure
+- [ ] Storms make coastal travel riskier but reveal better wreckage loot.
+- [ ] Night increases undead/spirit encounters and reveals ghost-light POIs.
+- [ ] Rest advances enough world time to refresh selected resources and move some NPC/world states.
 
 ### Respawn / world breathing
 - [ ] Encounter groups refresh on a slow timer so revisited areas aren't permanently empty.

@@ -57,6 +57,24 @@ ENEMY_TEMPLATES = {
         ],
         "xp_value": 20
     },
+    "drowned_first_mate": {
+        "id": "drowned_first_mate",
+        "name": "Drowned First Mate",
+        "description": "A salt-stiff corpse in ruined officer's leathers, moving with the stubborn discipline of someone still guarding their ship.",
+        "health": 34,
+        "attack_min": 4,
+        "attack_max": 8,
+        "special_attacks": [{"id": "rending_claw", "chance": 0.25}],
+        "gold_drop": [4, 10],
+        "unique": True,
+        "loot_groups": ["undead_remains_minor"],
+        "unique_loot": [
+            {"item_id": "captains_seal_ring", "chance": 1.0},
+            {"item_id": "steel_dagger", "chance": 0.35},
+            {"item_id": "ectoplasm_vial", "chance": 0.3}
+        ],
+        "xp_value": 45
+    },
 
     # --- NEW ENEMIES START HERE ---
 
@@ -509,7 +527,7 @@ ENEMY_TEMPLATES = {
             {"item_id": "rusty_dagger", "chance": 0.5},
             {"item_id": "wooden_shield_round", "chance": 0.2},
             {"item_id": "bone_fragment", "chance": 0.7},
-            {"item_id": "tarnished_old_coin", "chance": 0.4}
+            {"item_id": "old_coin_tarnished", "chance": 0.4}
         ],
         "xp_value": 20
     },

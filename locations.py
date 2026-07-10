@@ -74,6 +74,12 @@ ENCOUNTER_GROUPS = {
         {"enemy_id": "giant_crab_rockshore", "weight": 60},
         {"enemy_id": "sea_serpent_hatchling", "weight": 25},
         {"enemy_id": "giant_sand_crab", "weight": 15}
+    ],
+    "shipwreck_cove_creatures": [
+        {"enemy_id": "giant_crab_rockshore", "weight": 35},
+        {"enemy_id": "sea_serpent_hatchling", "weight": 25},
+        {"enemy_id": "zombie_shambler", "weight": 25},
+        {"enemy_id": "drowned_first_mate", "weight": 15}
     ]
     # Add more encounter groups for different environments/difficulty levels
 }
@@ -94,6 +100,18 @@ POI_LOOT_TABLES = {
         {"item_id": "ration_pack_basic", "chance": 0.5, "min_qty": 1, "max_qty": 1},
         {"item_id": "rope_hempen_10ft", "chance": 0.3, "min_qty": 1, "max_qty": 1},
         {"item_id": "rusted_nail", "chance": 0.7, "min_qty": 2, "max_qty": 5}
+    ],
+    "shipwreck_captains_locker": [
+        {"item_id": "charred_cargo_manifest", "chance": 1.0, "min_qty": 1, "max_qty": 1},
+        {"item_id": "silver_ring_plain", "chance": 0.35, "min_qty": 1, "max_qty": 1},
+        {"item_id": "scroll_light", "chance": 0.25, "min_qty": 1, "max_qty": 1}
+    ],
+    "shipwreck_cargo_hold": [
+        {"item_id": "rope_hempen_10ft", "chance": 0.45, "min_qty": 1, "max_qty": 1},
+        {"item_id": "repair_kit_basic", "chance": 0.2, "min_qty": 1, "max_qty": 1},
+        {"item_id": "spices_exotic_pouch", "chance": 0.12, "min_qty": 1, "max_qty": 1},
+        {"item_id": "ration_pack_basic", "chance": 0.4, "min_qty": 1, "max_qty": 2},
+        {"item_id": "rusted_nail", "chance": 0.8, "min_qty": 2, "max_qty": 6}
     ]
 }
 
@@ -236,7 +254,8 @@ LOCATIONS = {
         ],
         "encounter_groups": ["beach_low_level", "rocky_shoreline_creatures"],
         "exits": {
-            "east": "beach_starting"
+            "east": "beach_starting",
+            "north": "shipwreck_cove"
         },
         "items_common_find": ["broken_shell", "seaweed_clump", "crab_chitin_fragment"],
         "properties": ["coastal", "rocky_terrain", "tide_pools", "slippery"],
@@ -247,6 +266,75 @@ LOCATIONS = {
             "Something long and silver glides beneath the surface and is lost in the dark.",
         ],
         "ambient_sounds_ai_prompt": "Describe the ambient sounds of the Rocky Shoreline: crashing waves, seabird cries, water gurgling in crevices."
+    },
+    "shipwreck_cove": {
+        "id": "shipwreck_cove",
+        "name": "Shipwreck Cove",
+        "description_first_visit_prompt": "The player reaches Shipwreck Cove, a narrow inlet where the ribs of a broken merchant ship jut from black rocks. Describe torn sailcloth, flooded timbers, cargo debris, gulls, and the uneasy sense that the wreck is not finished with the living.",
+        "description_revisit_prompt": "The player returns to Shipwreck Cove. Briefly evoke the wreck's broken ribs, the tide moving through the hull, and any lingering unease around the cargo hold.",
+        "defined_pois": [
+            {
+                "poi_id": "wreck_signal_mast",
+                "display_text_for_player_choice": "A snapped signal mast tangled in salt-stiff rope.",
+                "type": "navigation_hint",
+                "reveals_exit_to": "rocky_shoreline_west",
+                "interaction_prompt_to_ai": "The player examines the snapped signal mast. Describe old signal flags, knots, and a sightline back toward the rocky shoreline."
+            },
+            {
+                "poi_id": "wreck_captains_locker",
+                "display_text_for_player_choice": "A brass-bound captain's locker wedged beneath warped planks.",
+                "type": "loot_container",
+                "loot_table_ids": ["shipwreck_captains_locker"],
+                "locked": True,
+                "key_id": "small_tarnished_bronze_key",
+                "lock_difficulty": 5,
+                "trapped_chance": 0.15,
+                "trap_enemy_id": "zombie_shambler",
+                "interaction_prompt_to_ai_on_open": "The player opens the brass-bound captain's locker inside the wreck.",
+                "interaction_prompt_to_ai_if_locked": "The player tries the brass-bound locker, but its green-pocked lock refuses to turn.",
+                "interaction_prompt_to_ai_if_trap_sprung": "As the locker opens, something below the deck answers with a wet, deliberate scrape."
+            },
+            {
+                "poi_id": "wreck_cargo_hold",
+                "display_text_for_player_choice": "A flooded cargo hold with crates knocking softly together.",
+                "type": "loot_container",
+                "loot_table_ids": ["shipwreck_cargo_hold"],
+                "locked": False,
+                "trapped_chance": 0.2,
+                "trap_enemy_id": "sea_serpent_hatchling",
+                "interaction_prompt_to_ai_on_open": "The player searches the half-flooded cargo hold for anything the sea has not ruined.",
+                "interaction_prompt_to_ai_if_trap_sprung": "The player disturbs the cargo hold, and the water under the crates suddenly moves."
+            },
+            {
+                "poi_id": "wreck_bell_below",
+                "display_text_for_player_choice": "A ship's bell half-submerged below the split deck.",
+                "type": "clue_object",
+                "interaction_prompt_to_ai": "The player studies the half-submerged ship's bell. Describe its inscription and the unnatural way the sound seems swallowed by the water."
+            },
+            {
+                "poi_id": "cove_tide_pool_glimmer",
+                "display_text_for_player_choice": "A deep tide pool glimmering under the wreck's shadow.",
+                "type": "loot_scatter",
+                "item_id_to_yield": "pearl_small",
+                "success_chance": 0.55,
+                "interaction_prompt_to_ai_on_success": "The player reaches into the tide pool and draws out the glimmering object without slipping.",
+                "interaction_prompt_to_ai_on_fail": "The player reaches for the glimmer, but the tide pool clouds with silt and the object vanishes."
+            }
+        ],
+        "encounter_groups": ["shipwreck_cove_creatures", "rocky_shoreline_creatures"],
+        "exits": {
+            "south": "rocky_shoreline_west"
+        },
+        "items_common_find": ["broken_shell", "seaweed_clump", "rusted_nail", "fish_bones"],
+        "properties": ["coastal", "rocky_terrain", "tide_pools", "slippery", "shipwreck"],
+        "weather_pool": ["overcast", "windy", "foggy", "stormy"],
+        "ambient_snippets": [
+            "Water slaps inside the broken hull with a hollow, patient rhythm.",
+            "A length of torn sailcloth snaps and twists from a high spar.",
+            "Something shifts in the cargo hold, then settles before you can place the sound.",
+            "The ship's bell rocks without ringing."
+        ],
+        "ambient_sounds_ai_prompt": "Describe the sounds of Shipwreck Cove: water in the hull, rope creaking, gulls, loose cargo knocking below deck."
     }
     # Add more locations as the game expands
 } 

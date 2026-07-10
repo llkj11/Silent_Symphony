@@ -54,6 +54,16 @@ QUEST_DB = {
                 "advance_on": {"event": "npc_interacted", "npc_id": "morwyn_trader"},
                 "requires_item": "captain_log_waterlogged",
             },
+            {
+                "id": "find_wreck_cove",
+                "text": "Follow the wreckage trail to Shipwreck Cove.",
+                "advance_on": {"event": "location_entered", "location_id": "shipwreck_cove"},
+            },
+            {
+                "id": "recover_manifest",
+                "text": "Search the captain's locker for the ship's cargo manifest.",
+                "advance_on": {"event": "item_obtained", "item_id": "charred_cargo_manifest"},
+            },
         ],
     },
     "markings_on_the_log": {

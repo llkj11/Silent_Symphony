@@ -19,6 +19,7 @@ import world
 import ai_context
 import npcs
 import quests
+import travel_events
 
 # Helper function to safely get text from AI response part
 def get_text_from_part(part):
@@ -205,6 +206,55 @@ def _interact_with_npc(player, npc_id):
             _merchant_loop(player, npc)
         elif chosen == "Heal":
             _healer_loop(player, npc)
+
+
+def _apply_travel_event(player, event):
+    if not event:
+        return None
+    print("\n--- Along the way ---")
+    print(event.get("narrative", "The journey takes an unexpected turn."))
+
+    damage = event.get("damage", 0)
+    if damage:
+        player["health"] = max(0, player.get("health", 0) - damage)
+        print(f"You take {damage} damage. (HP: {player['health']}/{player.get('max_health', '?')})")
+        if player["health"] <= 0:
+            print("The road claims you before you can recover.")
+            ai_context.log_event(player, f"Travel event '{event.get('id')}' was fatal.", significance="significant")
+            return "lost"
+
+    heal = event.get("heal", 0)
+    if heal:
+        before = player.get("health", 0)
+        player["health"] = min(player.get("max_health", before), before + heal)
+        print(f"You recover {player['health'] - before} HP. (HP: {player['health']}/{player.get('max_health', '?')})")
+
+    gold = event.get("gold", 0)
+    if gold:
+        player["gold"] = player.get("gold", 0) + gold
+        print(f"You pick up {gold} gold. (Total: {player['gold']})")
+
+    for item_id in event.get("items", []):
+        if item_id in items.ITEM_DB:
+            player["inventory"].append(item_id)
+            print(f"You obtained: {items.ITEM_DB[item_id]['name']}! Added to inventory.")
+            quests.on_event(player, "item_obtained", item_id=item_id)
+
+    enemy_id = event.get("enemy_id")
+    if enemy_id:
+        enemy_instance = entities.get_enemy_instance(enemy_id)
+        if enemy_instance:
+            combat_result = combat.combat(player, enemy_instance)
+            _log_combat_result(player, enemy_instance.get("name", enemy_id), combat_result)
+            if combat_result == "lost":
+                return "lost"
+
+    ai_context.log_event(
+        player,
+        f"Travel event: {event.get('id', 'unknown')}.",
+        significance=event.get("significance", "normal"),
+    )
+    return "resolved"
 
 
 def _healer_loop(player, npc):
@@ -1010,6 +1060,7 @@ def game():
                 chosen_exit_display = ui.get_numbered_choice("Choose a direction:", exit_options)
                 if chosen_exit_display != "[Stay Here]":
                     chosen_index = exit_options.index(chosen_exit_display)
+                    old_location_id = current_location_id
                     new_location_id = exit_destinations[chosen_index]
                     player['location'] = new_location_id
                     player['last_described_location'] = None 
@@ -1050,6 +1101,9 @@ def game():
                         print(f"\n{loc_desc_text}")
                         player['last_described_location'] = new_location_id
                         ai_context.log_event(player, f"Traveled to {new_location_data.get('name', new_location_id)}.")
+                        travel_event = travel_events.maybe_trigger(player, old_location_id, new_location_id, get_random_enemy_for_location)
+                        if _apply_travel_event(player, travel_event) == "lost":
+                            game_over = True
                     else:
                         print(f"Error: Could not find data for location {new_location_id}.")
             elif selected_action == 'Manage Inventory': manage_inventory(player)

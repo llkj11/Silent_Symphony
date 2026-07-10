@@ -595,6 +595,13 @@ ITEM_DB = {
         "type": "valuable",
         "value": 8
     },
+    "captains_seal_ring": {
+        "id": "captains_seal_ring",
+        "name": "Captain's Seal Ring",
+        "description": "A heavy brass ring stamped with a wave-split star. The metal is darkened by salt and age.",
+        "type": "valuable",
+        "value": 45
+    },
 
     # == Tools ==
     "lockpick_simple": {
@@ -711,6 +718,14 @@ ITEM_DB = {
         "name": "Waterlogged Captain's Log",
         "description": "A leather-bound journal, pages bloated with seawater. Entries describe a storm, a reef, and the order to abandon ship.",
         "type": "quest_item",
+        "value": 0
+    },
+    "charred_cargo_manifest": {
+        "id": "charred_cargo_manifest",
+        "name": "Charred Cargo Manifest",
+        "description": "A brittle ship manifest with the lower half burned away. Several cargo marks match the symbols carved into the driftwood log.",
+        "type": "quest_item",
+        "readable_content": "Manifest fragment: outbound under sealed charter. Cargo holds marked STAR, REEF, and BELOW. Survivors to make for the eastern cove if separated. Final line: 'If the bell is heard inland, do not follow it after dusk.'",
         "value": 0
     },
 
